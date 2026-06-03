@@ -48,10 +48,22 @@
 <body>
     <input type="file" id="input-importar" accept=".json" style="display: none;" onchange="processarImportacao(event)">
 
+    <!-- TELA DE LOGIN BLOQUEANTE -->
+    <div id="tela-login" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f5f5f5; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;">
+        <div class="container-formulario" style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 320px; box-sizing: border-box; text-align: center;">
+            <h2 style="color: #536dfe; margin-top: 0; margin-bottom: 20px;">Acesso ao Cifras</h2>
+            <div class="campo-grupo" style="text-align: left;">
+                <label for="input-senha">Senha de Acesso</label>
+                <input type="password" id="input-senha" placeholder="Digite a senha..." style="width: 100%; box-sizing: border-box;">
+            </div>
+            <button class="btn-acao" onclick="verificarSenha()" style="margin-top: 20px; width: 100%;">Entrar</button>
+        </div>
+    </div>
+
     <header>
-        <div><button onclick="abrirMenuPrincipal()">☰</button> Cifras</div>
+        <div><button id="btn-menu" onclick="abrirMenuPrincipal()">☰</button> Cifras</div>
         <div id="header-acoes-padrao" style="display: flex; gap: 5px; align-items: center;">
-            <button onclick="trocarTela('selecao-criacao-pasta')">+</button>
+            <button id="btn-adicionar" onclick="trocarTela('selecao-criacao-pasta')">+</button>
             <button onclick="trocarTela('pesquisa')">🔍</button>
         </div>
         <div id="header-acoes-editor" style="display: none; gap: 5px; align-items: center;">
@@ -180,6 +192,7 @@
     let bancoDeDados = JSON.parse(localStorage.getItem('appCifras')) || {};
     if (!Array.isArray(bancoDeDados["Importados"])) bancoDeDados["Importados"] = [];
 
+    let usuarioRole = null; // Controle global de nível ('admin' ou 'musico')
     let contextoEdicao = { pasta: "", musicaTitulo: "", indexEdicao: -1 };
     let contextoExportacao = { tipo: "", pasta: "", indexMusica: -1 };
     let modoTransferencia = 'mover';
@@ -190,6 +203,51 @@
     const regexAcordeExato = /^([A-G][b#]?m?(?:2|4|5|6|7|9|11|13|maj7|maj9|7M|9M|sus|sus2|sus4|dim|dim7|aug|add9|m7b5)?(\/[A-G][b#]?)?)$/i;
     const regexTags = /^(tom|intro|capo|ponte|refrão|refrao|coro|solo|final|parte|primeira|segunda|terceira|\d+)\s*:?\s*/i;
     const tagsBloco = new Set(['address', 'article', 'aside', 'blockquote', 'div', 'dl', 'dt', 'dd', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul']);
+
+    // SISTEMA DE VERIFICAÇÃO DE SENHAS
+    function verificarSenha() {
+        let senha = document.getElementById('input-senha').value;
+        if (senha === '10022006') {
+            usuarioRole = 'admin';
+            localStorage.setItem('cifrasAuth', 'admin');
+            document.getElementById('tela-login').style.display = 'none';
+            aplicarPermissoesDOM();
+            trocarTela('tela-inicial');
+        } else if (senha === 'musicos@') {
+            usuarioRole = 'musico';
+            localStorage.setItem('cifrasAuth', 'musico');
+            document.getElementById('tela-login').style.display = 'none';
+            aplicarPermissoesDOM();
+            trocarTela('tela-inicial');
+        } else {
+            alert("Senha incorreta!");
+        }
+    }
+
+    function aplicarPermissoesDOM() {
+        let btnAdicionar = document.getElementById('btn-adicionar');
+        let btnMenu = document.getElementById('btn-menu');
+        
+        if (usuarioRole === 'musico') {
+            if (btnAdicionar) btnAdicionar.style.display = 'none';
+            if (btnMenu) btnMenu.style.display = 'none';
+        } else {
+            if (btnAdicionar) btnAdicionar.style.display = 'block';
+            if (btnMenu) btnMenu.style.display = 'block';
+        }
+    }
+
+    function inicializarAutenticacao() {
+        let authSalva = localStorage.getItem('cifrasAuth');
+        if (authSalva === 'admin' || authSalva === 'musico') {
+            usuarioRole = authSalva;
+            document.getElementById('tela-login').style.display = 'none';
+            aplicarPermissoesDOM();
+            trocarTela('tela-inicial');
+        } else {
+            document.getElementById('tela-login').style.display = 'flex';
+        }
+    }
 
     function sortAlfanumerico(a, b) {
         return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
@@ -288,16 +346,16 @@
 
         if (tokens.length === 0) return [''];
 
-        let linhas = [''];
+        let lines = [''];
         tokens.forEach(token => {
             if (token.tipo === 'quebra') {
-                linhas.push('');
+                lines.push('');
             } else {
-                linhas[linhas.length - 1] += token.html;
+                lines[lines.length - 1] += token.html;
             }
         });
 
-        return linhas;
+        return lines;
     }
 
     function prepararHTMLParaEdicao(html) {
@@ -432,6 +490,7 @@
     }
 
     function editarCifra() {
+        if (usuarioRole !== 'admin') return; // Bloqueia edicao para musicos comuns
         tomOriginal = null;
         document.getElementById('visualizador-cifra').style.display = 'none';
         document.getElementById('toolbar-editor').style.display = 'flex';
@@ -582,6 +641,11 @@
     }
 
     function trocarTela(idDaTela) {
+        if (!usuarioRole && idDaTela !== 'tela-login') {
+            document.getElementById('tela-login').style.display = 'flex';
+            return;
+        }
+
         document.querySelectorAll('.tela').forEach(t => t.style.display = 'none');
         document.getElementById(idDaTela).style.display = 'block';
 
@@ -591,6 +655,7 @@
         } else {
             document.getElementById('header-acoes-padrao').style.display = 'flex';
             document.getElementById('header-acoes-editor').style.display = 'none';
+            aplicarPermissoesDOM(); // Forca a ocultacao de botoes na mudanca de tela
         }
 
         if (idDaTela === 'tela-inicial') renderizarPastas();
@@ -602,6 +667,7 @@
     }
 
     function prepararCriacao(tipo) {
+        if (usuarioRole !== 'admin') return;
         if (tipo === 'existente') {
             let pastasDisponiveis = Object.keys(bancoDeDados).filter(p => p !== "Importados").sort(sortAlfanumerico);
             if (pastasDisponiveis.length === 0) return alert("Crie uma nova pasta primeiro.");
@@ -621,6 +687,7 @@
     }
 
     function iniciarEditor() {
+        if (usuarioRole !== 'admin') return;
         let ehNovaPasta = document.getElementById('div-nome-pasta').style.display === 'flex';
         let nomePasta = ehNovaPasta ? document.getElementById('input-nome-pasta').value.trim() : document.getElementById('select-pasta-existente').value;
         let nomeMusica = document.getElementById('input-nome-musica').value.trim();
@@ -646,6 +713,7 @@
     }
 
     function salvarCifra() {
+        if (usuarioRole !== 'admin') return;
         let editor = document.getElementById('editor-visual');
         let htmlFormatado = formatarCifraVisual(editor.innerHTML);
 
@@ -802,6 +870,7 @@
     }
 
     function abrirMenuPrincipal() {
+        if (usuarioRole !== 'admin') return;
         document.getElementById('modal-menu-principal').style.display = 'flex';
     }
 
@@ -832,10 +901,19 @@
             btnRenomear.style.display = 'block';
         }
 
+        // ESCONDE BLOCO DE MODIFICACOES CASO SEJA USUARIO MUSICO
+        if (usuarioRole !== 'admin') {
+            btnExcluir.style.display = 'none';
+            btnRenomear.style.display = 'none';
+            btnMover.style.display = 'none';
+            btnCopiar.style.display = 'none';
+        }
+
         document.getElementById('modal-opcoes').style.display = 'flex';
     }
 
     function excluirItem() {
+        if (usuarioRole !== 'admin') return;
         fecharModal('modal-opcoes');
         if (contextoExportacao.tipo === 'pasta') {
             if (confirm(`Excluir a pasta "${contextoExportacao.pasta}"?`)) {
@@ -853,6 +931,7 @@
     }
 
     function renomearItem() {
+        if (usuarioRole !== 'admin') return;
         fecharModal('modal-opcoes');
         if (contextoExportacao.tipo === 'pasta') {
             let novoNome = prompt("Novo nome:", contextoExportacao.pasta);
@@ -879,6 +958,7 @@
     }
 
     function abrirModalTransferencia(modo) {
+        if (usuarioRole !== 'admin') return;
         fecharModal('modal-opcoes');
         modoTransferencia = modo;
 
@@ -903,6 +983,7 @@
     }
 
     function confirmarTransferencia() {
+        if (usuarioRole !== 'admin') return;
         let pastaDestino = document.getElementById('select-pasta-destino').value;
         let musicaOrigem = bancoDeDados[contextoExportacao.pasta][contextoExportacao.indexMusica];
         if (bancoDeDados[pastaDestino].some(m => m.titulo.toLowerCase() === musicaOrigem.titulo.toLowerCase())) return alert("Já existe!");
@@ -941,11 +1022,13 @@
     }
 
     function iniciarImportacao() {
+        if (usuarioRole !== 'admin') return;
         fecharModal('modal-menu-principal');
         document.getElementById('input-importar').click();
     }
 
     function processarImportacao(event) {
+        if (usuarioRole !== 'admin') return;
         let arquivo = event.target.files[0];
         if (!arquivo) return;
 
@@ -993,15 +1076,16 @@
     });
 
     salvarNoNavegador();
-    trocarTela('tela-inicial');
+    inicializarAutenticacao(); // Controla a entrada verificando senhas
+
     // Código para registrar o Service Worker do PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('PWA ativo com sucesso!', reg))
-            .catch(err => console.log('Erro ao ativar PWA', err));
-    });
-}
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA ativo com sucesso!', reg))
+                .catch(err => console.log('Erro ao ativar PWA', err));
+        });
+    }
     </script>
 </body>
 </html>
