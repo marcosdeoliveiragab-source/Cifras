@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cifras</title>
+    <!-- Versao com ajuste automatico dos hifens nas linhas de acordes. -->
+    <style>
+        body { font-family: sans-serif; margin: 0; background-color: #f5f5f5; height: 100vh; display: flex; flex-direction: column; }
+        header { background-color: #536dfe; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        header button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 0 10px; }
+
+        .tela { padding: 20px; flex: 1; overflow-y: auto; background-color: #fff; }
+        .btn-principal { background-color: #536dfe; color: white; border: none; padding: 15px; width: 100%; font-size: 16px; border-radius: 8px; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
+        .btn-voltar { background-color: #eee; border: 1px solid #ccc; padding: 8px 15px; font-size: 14px; border-radius: 5px; cursor: pointer; margin-bottom: 20px; }
+
+        .container-central { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 15px; max-width: 320px; margin: 0 auto; }
+        .container-formulario { display: flex; flex-direction: column; max-width: 320px; margin: 0 auto; gap: 15px; }
+        .campo-grupo { display: flex; flex-direction: column; gap: 5px; }
+        .campo-grupo label { font-weight: bold; font-size: 14px; }
+        .campo-grupo input, .campo-grupo select { padding: 10px; border: 2px solid #dcdcdc; border-radius: 8px; font-size: 16px; outline: none; background-color: #fff; }
+
+        .item-lista { display: flex; align-items: center; justify-content: space-between; padding: 15px 10px; border-bottom: 1px solid #ddd; cursor: pointer; }
+        .item-lista-esquerda { display: flex; align-items: center; }
+        .icone-opcoes { color: #888; font-weight: bold; padding: 5px 15px; font-size: 20px; }
+
+        #editor-visual, #visualizador-cifra {
+            width: 100%; min-height: 70vh; border: none;
+            font-family: monospace; font-size: 16px; padding: 10px 0 60px 0;
+            white-space: pre-wrap; outline: none; background: #fff;
+            box-sizing: border-box;
+        }
+
+        #editor-visual { border: 1px solid #ddd; padding: 10px; }
+        .acorde { color: #536dfe; font-weight: bold; }
+
+        .modal-fundo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-caixa { background-color: #fff; padding: 20px; border-radius: 10px; width: 280px; display: flex; flex-direction: column; gap: 10px; }
+        .btn-acao { background-color: #536dfe; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .btn-excluir { background-color: #ff4d4d; color: white; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        .btn-cancelar { background-color: #eee; border: none; padding: 12px; border-radius: 5px; cursor: pointer; font-size: 16px; color: #333; }
+
+        .grade-tons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
+        .btn-toolbar { width: 35px; height: 35px; border: 1px solid #ccc; border-radius: 5px; background: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .btn-toolbar:hover { background: #eee; }
+    </style>
+</head>
+<body>
+    <input type="file" id="input-importar" accept=".json" style="display: none;" onchange="processarImportacao(event)">
+
+    <header>
+        <div><button onclick="abrirMenuPrincipal()">☰</button> Cifras</div>
+        <div id="header-acoes-padrao" style="display: flex; gap: 5px; align-items: center;">
+            <button onclick="trocarTela('selecao-criacao-pasta')">+</button>
+            <button onclick="trocarTela('pesquisa')">🔍</button>
+        </div>
+        <div id="header-acoes-editor" style="display: none; gap: 5px; align-items: center;">
+            <button onclick="abrirModalTom()" style="font-weight: bold;" title="Mudar tom">🎵</button>
+            <button onclick="alterarFonte(-2)" style="font-weight: bold;">A-</button>
+            <button onclick="alterarFonte(2)" style="font-weight: bold;">A+</button>
+            <button onclick="salvarCifra()" style="margin-left: 10px;" id="btn-salvar-cifra">💾</button>
+        </div>
+    </header>
+
+    <div id="tela-inicial" class="tela">
+        <div id="lista-pastas-container"></div>
+    </div>
+
+    <div id="selecao-criacao-pasta" class="tela" style="display: none;">
+        <button class="btn-voltar" onclick="trocarTela('tela-inicial')">← Voltar</button>
+        <div class="container-central">
+            <button class="btn-principal" onclick="prepararCriacao('nova')">Criar nova pasta</button>
+            <button class="btn-principal" style="background-color: #eee; color: #333; border: 2px solid #ddd;" onclick="prepararCriacao('existente')">Selecionar pasta existente</button>
+        </div>
+    </div>
+
+    <div id="tela-criar-pasta" class="tela" style="display: none;">
+        <button class="btn-voltar" onclick="trocarTela('selecao-criacao-pasta')">← Voltar</button>
+        <div class="container-formulario">
+            <div id="div-nome-pasta" class="campo-grupo">
+                <label>Nome da nova pasta</label>
+                <input type="text" id="input-nome-pasta" placeholder="Ex: Harpa Cristã">
+            </div>
+            <div id="div-select-pasta" class="campo-grupo" style="display:none;">
+                <label>Escolher pasta</label>
+                <select id="select-pasta-existente"></select>
+            </div>
+            <div class="campo-grupo">
+                <label>Nome da música</label>
+                <input type="text" id="input-nome-musica" placeholder="Ex: Alvo mais que a neve">
+            </div>
+            <button class="btn-acao" onclick="iniciarEditor()" style="margin-top: 10px;">Criar cifra</button>
+        </div>
+    </div>
+
+    <div id="tela-musicas-pasta" class="tela" style="display: none;">
+        <button class="btn-voltar" onclick="trocarTela('tela-inicial')">← Voltar</button>
+        <h2 id="titulo-pasta-atual" style="margin-top: 0;"></h2>
+        <div id="lista-musicas-container"></div>
+    </div>
+
+    <div id="tela-editor-cifra" class="tela" style="display: none;">
+        <button class="btn-voltar" onclick="voltarDoEditor()">← Voltar</button>
+
+        <div id="toolbar-editor" style="display: none; gap: 8px; margin-bottom: 10px; background: #e0e0e0; padding: 10px; border-radius: 8px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('bold', false, null)" style="font-weight: bold;" title="Negrito">B</button>
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('italic', false, null)" style="font-style: italic;" title="Itálico">I</button>
+            <span style="margin: 0 5px; color: #aaa;">|</span>
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('foreColor', false, 'black')" style="color: black; font-weight: bold;" title="Preto">A</button>
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('foreColor', false, 'red')" style="color: red; font-weight: bold;" title="Vermelho">A</button>
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('foreColor', false, 'darkgreen')" style="color: darkgreen; font-weight: bold;" title="Verde Escuro">A</button>
+            <button class="btn-toolbar" onmousedown="event.preventDefault();" onclick="document.execCommand('foreColor', false, '#4B0082')" style="color: #4B0082; font-weight: bold;" title="Roxo Escuro">A</button>
+            <span style="font-size: 12px; color: #555; margin-left: 10px;">Selecione para formatar</span>
+        </div>
+
+        <div id="editor-visual" contenteditable="true" spellcheck="false" style="display: none;"></div>
+        <div id="visualizador-cifra" ondblclick="editarCifra()" title="Dê 2 cliques para editar"></div>
+    </div>
+
+    <div id="pesquisa" class="tela" style="display: none;">
+        <button class="btn-voltar" onclick="trocarTela('tela-inicial')">← Voltar</button>
+        <input type="text" id="input-pesquisa" onkeyup="realizarPesquisa()" placeholder="Buscar música ou pasta..." style="width: 100%; padding: 15px; margin-bottom: 20px; box-sizing: border-box; border-radius: 8px; border: 2px solid #ccc; font-size: 16px;">
+        <div id="resultado-pesquisa"></div>
+    </div>
+
+    <div id="modal-opcoes" class="modal-fundo">
+        <div class="modal-caixa">
+            <h3 id="titulo-modal" style="margin: 0 0 10px 0; text-align: center;">Opções</h3>
+            <button class="btn-acao" onclick="baixarArquivo()">Exportar (Baixar)</button>
+            <button class="btn-acao" onclick="renomearItem()" id="btn-renomear">Renomear</button>
+            <button class="btn-acao" id="btn-mover" onclick="abrirModalTransferencia('mover')">Mover para outra pasta</button>
+            <button class="btn-acao" id="btn-copiar" onclick="abrirModalTransferencia('copiar')">Copiar para outra pasta</button>
+            <button class="btn-excluir" id="btn-excluir" onclick="excluirItem()">Excluir</button>
+            <button class="btn-cancelar" onclick="fecharModal('modal-opcoes')">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modal-transferir" class="modal-fundo">
+        <div class="modal-caixa">
+            <h3 id="titulo-modal-transferencia" style="margin: 0; text-align: center;">Transferir</h3>
+            <div class="campo-grupo">
+                <label>Selecione a pasta destino:</label>
+                <select id="select-pasta-destino"></select>
+            </div>
+            <button class="btn-acao" id="btn-confirmar-transferencia" onclick="confirmarTransferencia()">Confirmar</button>
+            <button class="btn-cancelar" onclick="fecharModal('modal-transferir')">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="modal-menu-principal" class="modal-fundo">
+        <div class="modal-caixa">
+            <h3 style="margin: 0; text-align: center;">Menu Principal</h3>
+            <button class="btn-acao" onclick="iniciarImportacao()">📥 Importar Arquivo (.json)</button>
+            <button class="btn-cancelar" onclick="fecharModal('modal-menu-principal')">Fechar</button>
+        </div>
+    </div>
+
+    <div id="modal-tom" class="modal-fundo">
+        <div class="modal-caixa">
+            <h3 style="margin: 0; text-align: center;">Mudar Tom</h3>
+            <div class="grade-tons">
+                <button class="btn-acao" onclick="aplicarTransposicao('C')">C</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('C#')">C#</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('D')">D</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('D#')">D#</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('E')">E</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('F')">F</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('F#')">F#</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('G')">G</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('G#')">G#</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('A')">A</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('A#')">A#</button>
+                <button class="btn-acao" onclick="aplicarTransposicao('B')">B</button>
+            </div>
+            <button class="btn-cancelar" onclick="fecharModal('modal-tom')">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+    let bancoDeDados = JSON.parse(localStorage.getItem('appCifras')) || {};
+    if (!Array.isArray(bancoDeDados["Importados"])) bancoDeDados["Importados"] = [];
+
+    let contextoEdicao = { pasta: "", musicaTitulo: "", indexEdicao: -1 };
+    let contextoExportacao = { tipo: "", pasta: "", indexMusica: -1 };
+    let modoTransferencia = 'mover';
+    let tamanhoFonte = 16;
+    let tomOriginal = null;
+
+    const notasEscala = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const regexAcordeExato = /^([A-G][b#]?m?(?:2|4|5|6|7|9|11|13|maj7|maj9|7M|9M|sus|sus2|sus4|dim|dim7|aug|add9|m7b5)?(\/[A-G][b#]?)?)$/i;
+    const regexTags = /^(tom|intro|capo|ponte|refrão|refrao|coro|solo|final|parte|primeira|segunda|terceira|\d+)\s*:?\s*/i;
+    const tagsBloco = new Set(['address', 'article', 'aside', 'blockquote', 'div', 'dl', 'dt', 'dd', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'nav', 'ol', 'p', 'pre', 'section', 'table', 'ul']);
+
+    function sortAlfanumerico(a, b) {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function escaparHTML(texto) {
+        return texto
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function escaparAtributo(texto) {
+        return String(texto)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    function serializarAtributos(el) {
+        return Array.from(el.attributes)
+            .map(attr => ` ${attr.name}="${escaparAtributo(attr.value)}"`)
+            .join('');
+    }
+
+    function envolverComFormatacao(html, formatacoes) {
+        return formatacoes.reduceRight((conteudo, item) => `<${item.tag}${item.attrs}>${conteudo}</${item.tag}>`, html);
+    }
+
+    function adicionarTextoComoTokens(tokens, texto, formatacoes) {
+        let limpo = texto.replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\r\n?/g, '\n');
+        let partes = limpo.split('\n');
+
+        partes.forEach((parte, index) => {
+            if (index > 0) tokens.push({ tipo: 'quebra', origem: 'texto' });
+            if (parte !== '') {
+                tokens.push({ tipo: 'texto', html: envolverComFormatacao(escaparHTML(parte), formatacoes) });
+            }
+        });
+    }
+
+    function adicionarQuebra(tokens, origem) {
+        tokens.push({ tipo: 'quebra', origem });
+    }
+
+    function processarNoParaTokens(no, tokens, formatacoes) {
+        if (no.nodeType === Node.TEXT_NODE) {
+            adicionarTextoComoTokens(tokens, no.nodeValue || '', formatacoes);
+            return;
+        }
+
+        if (no.nodeType !== Node.ELEMENT_NODE) return;
+
+        let tag = no.tagName.toLowerCase();
+        if (tag === 'br') {
+            adicionarQuebra(tokens, 'br');
+            return;
+        }
+
+        if (tag === 'b' && no.classList.contains('acorde')) {
+            no.childNodes.forEach(filho => processarNoParaTokens(filho, tokens, formatacoes));
+            return;
+        }
+
+        if (tagsBloco.has(tag)) {
+            if (tokens.length > 0 && tokens[tokens.length - 1].tipo !== 'quebra') {
+                adicionarQuebra(tokens, 'bloco');
+            }
+
+            let inicio = tokens.length;
+            no.childNodes.forEach(filho => processarNoParaTokens(filho, tokens, formatacoes));
+
+            if (tokens.length === inicio) {
+                adicionarQuebra(tokens, 'br');
+            } else if (tokens[tokens.length - 1].tipo !== 'quebra') {
+                adicionarQuebra(tokens, 'bloco');
+            }
+            return;
+        }
+
+        let novaFormatacao = formatacoes.concat([{ tag, attrs: serializarAtributos(no) }]);
+        no.childNodes.forEach(filho => processarNoParaTokens(filho, tokens, novaFormatacao));
+    }
+
+    function normalizarHTMLParaLinhas(html) {
+        let container = document.createElement('div');
+        container.innerHTML = html || '';
+
+        let tokens = [];
+        container.childNodes.forEach(no => processarNoParaTokens(no, tokens, []));
+
+        while (tokens.length > 0 && tokens[tokens.length - 1].tipo === 'quebra' && tokens[tokens.length - 1].origem === 'bloco') {
+            tokens.pop();
+        }
+
+        if (tokens.length === 0) return [''];
+
+        let linhas = [''];
+        tokens.forEach(token => {
+            if (token.tipo === 'quebra') {
+                linhas.push('');
+            } else {
+                linhas[linhas.length - 1] += token.html;
+            }
+        });
+
+        return linhas;
+    }
+
+    function prepararHTMLParaEdicao(html) {
+        return normalizarHTMLParaLinhas(html).join('<br>');
+    }
+
+    function textoPuroDaLinha(linha) {
+        let temp = document.createElement('div');
+        temp.innerHTML = linha;
+        return (temp.textContent || '').replace(/\u00a0/g, ' ');
+    }
+
+    function normalizarEspacamentoHifensEmTexto(texto) {
+        let textoLimpo = texto.replace(/\u00a0/g, ' ');
+        let inicio = (textoLimpo.match(/^\s*/) || [''])[0];
+        let corpo = textoLimpo.slice(inicio.length).trim();
+
+        if (!corpo.includes('-')) return textoLimpo;
+
+        corpo = corpo
+            .replace(/\s*-\s*/g, ' - ')
+            .replace(/[ \t\f\v]+/g, ' ')
+            .trim();
+
+        return inicio + corpo;
+    }
+
+    function trocarTagsPorMarcadores(html) {
+        let tags = [];
+        let texto = html.replace(/<[^>]+>/g, tag => {
+            let marcador = `\uE000${tags.length}\uE001`;
+            tags.push(tag);
+            return marcador;
+        });
+
+        return { texto, tags };
+    }
+
+    function restaurarTagsDosMarcadores(texto, tags) {
+        return texto.replace(/\uE000(\d+)\uE001/g, (match, index) => tags[Number(index)] || match);
+    }
+
+    function normalizarEspacamentoHifensEmHTML(html) {
+        let partes = trocarTagsPorMarcadores(html);
+        let textoNormalizado = normalizarEspacamentoHifensEmTexto(partes.texto);
+        return restaurarTagsDosMarcadores(textoNormalizado, partes.tags);
+    }
+
+    function analisarLinhaDeCifra(linha) {
+        let texto = textoPuroDaLinha(linha);
+        let temHifen = texto.includes('-');
+        let textoParaValidar = temHifen ? normalizarEspacamentoHifensEmTexto(texto) : texto;
+        let palavras = textoParaValidar.trim().split(/\s+/).filter(p => p !== '');
+
+        return {
+            texto,
+            textoNormalizado: textoParaValidar,
+            palavras,
+            temHifen,
+            ehCifra: palavras.length > 0 && palavras.every(validarPalavraCifra)
+        };
+    }
+
+    function validarPalavraCifra(p) {
+        let texto = p.replace(/^[\[\(]+|[\]\)]+$/g, '').trim();
+        if (texto === '') return false;
+        if (/^[-|:,/]+$/.test(texto)) return true;
+        let semTag = texto.replace(regexTags, '');
+        if (semTag === '') return true;
+        return regexAcordeExato.test(semTag);
+    }
+
+    function extrairAcordeDaPalavra(p) {
+        let limpa = p.replace(/^[\[\(]+|[\]\)]+$/g, '');
+        let tagMatch = limpa.match(regexTags);
+        if (tagMatch) limpa = limpa.substring(tagMatch[0].length);
+        if (limpa && regexAcordeExato.test(limpa)) return limpa;
+        return null;
+    }
+
+    function salvarNoNavegador() {
+        for (let pasta in bancoDeDados) {
+            bancoDeDados[pasta].sort((a, b) => sortAlfanumerico(a.titulo, b.titulo));
+        }
+        localStorage.setItem('appCifras', JSON.stringify(bancoDeDados));
+    }
+
+    function atualizarIndiceEdicao() {
+        let musicas = bancoDeDados[contextoEdicao.pasta];
+        if (!musicas) return;
+        contextoEdicao.indexEdicao = musicas.findIndex(m => m.titulo === contextoEdicao.musicaTitulo);
+    }
+
+    function alterarFonte(delta) {
+        tamanhoFonte += delta;
+        if (tamanhoFonte < 10) tamanhoFonte = 10;
+        if (tamanhoFonte > 40) tamanhoFonte = 40;
+        document.getElementById('editor-visual').style.fontSize = tamanhoFonte + "px";
+        document.getElementById('visualizador-cifra').style.fontSize = tamanhoFonte + "px";
+    }
+
+    function formatarLinhaDeAcordes(linha) {
+        return linha.replace(/(>|^)([^<]+)(<|$)/g, function(match, prefix, conteudo, suffix) {
+            let pedacos = conteudo.split(/(\s+|&nbsp;)/).map(pedaco => {
+                let textoPedaco = pedaco.replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ');
+                let acorde = extrairAcordeDaPalavra(textoPedaco);
+                if (acorde) {
+                    let idx = pedaco.lastIndexOf(acorde);
+                    if (idx !== -1) {
+                        let acordeSeguro = escaparAtributo(acorde);
+                        return pedaco.substring(0, idx) + `<b class="acorde" data-nota="${acordeSeguro}">${escaparHTML(acorde)}</b>` + pedaco.substring(idx + acorde.length);
+                    }
+                }
+                return pedaco;
+            });
+            return prefix + pedacos.join('') + suffix;
+        });
+    }
+
+    function formatarCifraVisual(html) {
+        let linhas = normalizarHTMLParaLinhas(html);
+
+        return linhas.map(linha => {
+            let infoLinha = analisarLinhaDeCifra(linha);
+            if (infoLinha.palavras.length === 0) return linha;
+            if (infoLinha.ehCifra && infoLinha.temHifen) {
+                return formatarLinhaDeAcordes(normalizarEspacamentoHifensEmHTML(linha));
+            }
+            if (infoLinha.ehCifra) return formatarLinhaDeAcordes(linha);
+            return linha;
+        }).join('<br>');
+    }
+
+    function editarCifra() {
+        tomOriginal = null;
+        document.getElementById('visualizador-cifra').style.display = 'none';
+        document.getElementById('toolbar-editor').style.display = 'flex';
+
+        let editor = document.getElementById('editor-visual');
+        editor.innerHTML = prepararHTMLParaEdicao(editor.innerHTML);
+        editor.style.display = 'block';
+        editor.focus();
+        document.getElementById('btn-salvar-cifra').style.display = 'block';
+    }
+
+    function abrirModalTom() {
+        document.getElementById('modal-tom').style.display = 'flex';
+    }
+
+    function normalizarNota(nota) {
+        const equivalentes = { 'DB': 'C#', 'EB': 'D#', 'GB': 'F#', 'AB': 'G#', 'BB': 'A#' };
+        let notaUpper = nota.toUpperCase();
+        return equivalentes[notaUpper] || notaUpper;
+    }
+
+    function descobrirTomDaMusica(html) {
+        let linhas = normalizarHTMLParaLinhas(html);
+        for (let linha of linhas) {
+            let infoLinha = analisarLinhaDeCifra(linha);
+            let matchTom = infoLinha.textoNormalizado.trim().match(/^tom:\s*([A-G][b#]?)/i);
+            if (matchTom) return normalizarNota(matchTom[1]);
+
+            if (infoLinha.ehCifra) {
+                for (let p of infoLinha.palavras) {
+                    let acorde = extrairAcordeDaPalavra(p);
+                    if (acorde) {
+                        let matchAcorde = acorde.match(/^([A-G][b#]?)/i);
+                        if (matchAcorde) return normalizarNota(matchAcorde[1]);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    function transporAcorde(acorde, diferenca) {
+        let partes = acorde.split('/');
+        for (let i = 0; i < partes.length; i++) {
+            let raizMatch = partes[i].match(/^([A-G][b#]?)/i);
+            if (raizMatch) {
+                let raiz = normalizarNota(raizMatch[1]);
+                let resto = partes[i].substring(raizMatch[1].length);
+                let index = notasEscala.indexOf(raiz);
+                if (index !== -1) {
+                    let novoIndex = (index + diferenca + 120) % 12;
+                    partes[i] = notasEscala[novoIndex] + resto;
+                }
+            }
+        }
+        return partes.join('/');
+    }
+
+    function transporTextoDeAcordesComHifen(texto, diferenca) {
+        let textoNormalizado = normalizarEspacamentoHifensEmTexto(texto);
+
+        return textoNormalizado.replace(/\S+/g, token => {
+            let acorde = extrairAcordeDaPalavra(token);
+            if (!acorde) return token;
+
+            let acordeTransposto = transporAcorde(acorde, diferenca);
+            let idx = token.lastIndexOf(acorde);
+            if (idx === -1) return token;
+
+            return token.substring(0, idx) + acordeTransposto + token.substring(idx + acorde.length);
+        });
+    }
+
+    function transporLinhaDeAcordes(linha, diferenca, infoLinha) {
+        let info = infoLinha || analisarLinhaDeCifra(linha);
+
+        if (info.temHifen) {
+            return escaparHTML(transporTextoDeAcordesComHifen(info.texto, diferenca));
+        }
+
+        return linha.replace(/(>|^)([^<]+)(<|$)/g, function(match, prefix, conteudo, suffix) {
+            let difLenPendente = 0;
+            let pedacos = conteudo.split(/(&nbsp;|\s)/);
+
+            for (let k = 0; k < pedacos.length; k++) {
+                if (pedacos[k] === '&nbsp;' || /^\s$/.test(pedacos[k])) {
+                    if (difLenPendente > 0) {
+                        pedacos[k] = '';
+                        difLenPendente--;
+                    } else if (difLenPendente < 0) {
+                        pedacos[k] += '&nbsp;';
+                        difLenPendente++;
+                    }
+                } else if (pedacos[k].length > 0) {
+                    let textPedaco = pedacos[k].replace(/&nbsp;/g, ' ').replace(/\u00a0/g, ' ');
+                    let acorde = extrairAcordeDaPalavra(textPedaco);
+                    if (acorde) {
+                        let acordeTransposto = transporAcorde(acorde, diferenca);
+                        difLenPendente += (acordeTransposto.length - acorde.length);
+                        let idx = pedacos[k].lastIndexOf(acorde);
+                        if (idx !== -1) {
+                            pedacos[k] = pedacos[k].substring(0, idx) + acordeTransposto + pedacos[k].substring(idx + acorde.length);
+                        }
+                    }
+                }
+            }
+
+            return prefix + pedacos.join('') + suffix;
+        });
+    }
+
+    function aplicarTransposicao(notaDestino) {
+        let editor = document.getElementById('editor-visual');
+        let html = editor.innerHTML;
+
+        if (!tomOriginal) tomOriginal = descobrirTomDaMusica(html);
+        if (!tomOriginal) return alert("Não foi possível identificar acordes na música para transpor.");
+
+        let idxOrig = notasEscala.indexOf(tomOriginal);
+        let idxDest = notasEscala.indexOf(notaDestino);
+        let diferenca = idxDest - idxOrig;
+
+        if (diferenca !== 0) {
+            let linhas = normalizarHTMLParaLinhas(html);
+            let novoTexto = linhas.map(linha => {
+                let infoLinha = analisarLinhaDeCifra(linha);
+                if (infoLinha.ehCifra) {
+                    return transporLinhaDeAcordes(linha, diferenca, infoLinha);
+                }
+                return linha;
+            }).join('<br>');
+
+            let htmlFinal = formatarCifraVisual(novoTexto);
+            let pasta = contextoEdicao.pasta;
+            atualizarIndiceEdicao();
+
+            if (contextoEdicao.indexEdicao !== -1) {
+                bancoDeDados[pasta][contextoEdicao.indexEdicao].letra = htmlFinal;
+                salvarNoNavegador();
+                atualizarIndiceEdicao();
+            }
+
+            editor.innerHTML = prepararHTMLParaEdicao(htmlFinal);
+            document.getElementById('visualizador-cifra').innerHTML = htmlFinal;
+            tomOriginal = notaDestino;
+        }
+        fecharModal('modal-tom');
+    }
+
+    function trocarTela(idDaTela) {
+        document.querySelectorAll('.tela').forEach(t => t.style.display = 'none');
+        document.getElementById(idDaTela).style.display = 'block';
+
+        if (idDaTela === 'tela-editor-cifra') {
+            document.getElementById('header-acoes-padrao').style.display = 'none';
+            document.getElementById('header-acoes-editor').style.display = 'flex';
+        } else {
+            document.getElementById('header-acoes-padrao').style.display = 'flex';
+            document.getElementById('header-acoes-editor').style.display = 'none';
+        }
+
+        if (idDaTela === 'tela-inicial') renderizarPastas();
+        if (idDaTela === 'pesquisa') {
+            document.getElementById('input-pesquisa').value = "";
+            document.getElementById('resultado-pesquisa').innerHTML = "";
+            document.getElementById('input-pesquisa').focus();
+        }
+    }
+
+    function prepararCriacao(tipo) {
+        if (tipo === 'existente') {
+            let pastasDisponiveis = Object.keys(bancoDeDados).filter(p => p !== "Importados").sort(sortAlfanumerico);
+            if (pastasDisponiveis.length === 0) return alert("Crie uma nova pasta primeiro.");
+
+            let sel = document.getElementById('select-pasta-existente');
+            sel.innerHTML = pastasDisponiveis.map(p => `<option value="${escaparAtributo(p)}">${escaparHTML(p)}</option>`).join('');
+            document.getElementById('div-nome-pasta').style.display = 'none';
+            document.getElementById('div-select-pasta').style.display = 'flex';
+        } else {
+            document.getElementById('div-nome-pasta').style.display = 'flex';
+            document.getElementById('div-select-pasta').style.display = 'none';
+        }
+
+        document.getElementById('input-nome-pasta').value = "";
+        document.getElementById('input-nome-musica').value = "";
+        trocarTela('tela-criar-pasta');
+    }
+
+    function iniciarEditor() {
+        let ehNovaPasta = document.getElementById('div-nome-pasta').style.display === 'flex';
+        let nomePasta = ehNovaPasta ? document.getElementById('input-nome-pasta').value.trim() : document.getElementById('select-pasta-existente').value;
+        let nomeMusica = document.getElementById('input-nome-musica').value.trim();
+
+        if (!nomePasta || !nomeMusica) return alert("Preencha todos os campos!");
+        if (ehNovaPasta && nomePasta.toLowerCase() === "importados") return alert("Você não pode usar o nome 'Importados'.");
+        if (bancoDeDados[nomePasta] && bancoDeDados[nomePasta].some(m => m.titulo.toLowerCase() === nomeMusica.toLowerCase())) return alert("Música já existe!");
+
+        contextoEdicao = { pasta: nomePasta, musicaTitulo: nomeMusica, indexEdicao: -1 };
+        tomOriginal = null;
+
+        let editor = document.getElementById('editor-visual');
+        editor.innerHTML = "";
+        editor.style.fontSize = tamanhoFonte + "px";
+
+        document.getElementById('visualizador-cifra').style.display = 'none';
+        editor.style.display = 'block';
+        document.getElementById('toolbar-editor').style.display = 'flex';
+        document.getElementById('btn-salvar-cifra').style.display = 'block';
+
+        trocarTela('tela-editor-cifra');
+        editor.focus();
+    }
+
+    function salvarCifra() {
+        let editor = document.getElementById('editor-visual');
+        let htmlFormatado = formatarCifraVisual(editor.innerHTML);
+
+        let pasta = contextoEdicao.pasta;
+        if (!bancoDeDados[pasta]) bancoDeDados[pasta] = [];
+        let novaMusica = { titulo: contextoEdicao.musicaTitulo, letra: htmlFormatado };
+
+        if (contextoEdicao.indexEdicao === -1) {
+            bancoDeDados[pasta].push(novaMusica);
+        } else {
+            atualizarIndiceEdicao();
+            bancoDeDados[pasta][contextoEdicao.indexEdicao] = novaMusica;
+        }
+
+        salvarNoNavegador();
+        atualizarIndiceEdicao();
+
+        let vis = document.getElementById('visualizador-cifra');
+        vis.innerHTML = htmlFormatado;
+        editor.innerHTML = prepararHTMLParaEdicao(htmlFormatado);
+
+        editor.style.display = 'none';
+        document.getElementById('toolbar-editor').style.display = 'none';
+        vis.style.display = 'block';
+        document.getElementById('btn-salvar-cifra').style.display = 'none';
+
+        alert("Salvo com sucesso!");
+    }
+
+    function renderizarPastas() {
+        let container = document.getElementById('lista-pastas-container');
+        container.innerHTML = "";
+
+        let nomesDasPastas = Object.keys(bancoDeDados).sort(sortAlfanumerico).filter(n => n !== "Importados");
+        nomesDasPastas.unshift("Importados");
+
+        for (let nome of nomesDasPastas) {
+            if (!Array.isArray(bancoDeDados[nome])) bancoDeDados[nome] = [];
+            let divPasta = document.createElement('div');
+            divPasta.className = 'item-lista';
+            divPasta.onclick = function() { abrirPasta(nome); };
+            let qtdeMusicas = bancoDeDados[nome].length;
+
+            divPasta.innerHTML = `
+                <div class="item-lista-esquerda">
+                    <span style="font-size: 24px; margin-right: 15px;">📁</span>
+                    <div>
+                        <div style="font-weight: bold;">${escaparHTML(nome)}</div>
+                        <div style="font-size: 12px; color: #888;">${qtdeMusicas} música(s)</div>
+                    </div>
+                </div>
+            `;
+
+            let iconeOpcoes = document.createElement('span');
+            iconeOpcoes.className = 'icone-opcoes';
+            iconeOpcoes.innerText = '⋮';
+            iconeOpcoes.onclick = function(event) { event.stopPropagation(); abrirOpcoes('pasta', nome, -1); };
+            divPasta.appendChild(iconeOpcoes);
+            container.appendChild(divPasta);
+        }
+    }
+
+    function abrirPasta(nomeDaPasta) {
+        let container = document.getElementById('lista-musicas-container');
+        document.getElementById('titulo-pasta-atual').innerText = nomeDaPasta;
+        container.innerHTML = "";
+
+        let musicas = bancoDeDados[nomeDaPasta] || [];
+        if (musicas.length === 0) container.innerHTML = "<p style='text-align: center; color:#888;'>Pasta vazia.</p>";
+
+        for (let i = 0; i < musicas.length; i++) {
+            let divMusica = document.createElement('div');
+            divMusica.className = 'item-lista';
+            divMusica.onclick = function() { abrirMusica(nomeDaPasta, i); };
+            divMusica.innerHTML = `<div class="item-lista-esquerda"><span style="margin-right: 15px;">🎵</span> <span>${escaparHTML(musicas[i].titulo)}</span></div>`;
+
+            let iconeOpcoes = document.createElement('span');
+            iconeOpcoes.className = 'icone-opcoes';
+            iconeOpcoes.innerText = '⋮';
+            iconeOpcoes.onclick = function(event) { event.stopPropagation(); abrirOpcoes('musica', nomeDaPasta, i); };
+            divMusica.appendChild(iconeOpcoes);
+            container.appendChild(divMusica);
+        }
+        trocarTela('tela-musicas-pasta');
+    }
+
+    function abrirMusica(nomeDaPasta, index) {
+        let musica = bancoDeDados[nomeDaPasta][index];
+        contextoEdicao = { pasta: nomeDaPasta, musicaTitulo: musica.titulo, indexEdicao: index };
+        tomOriginal = null;
+
+        let htmlSalvo = musica.letra || '';
+        if (!htmlSalvo.includes('<br') && !htmlSalvo.includes('<div') && !htmlSalvo.includes('<p')) {
+            htmlSalvo = escaparHTML(htmlSalvo).replace(/\r\n?|\n/g, '<br>');
+        }
+
+        let htmlFormatado = formatarCifraVisual(htmlSalvo);
+        let editor = document.getElementById('editor-visual');
+        let vis = document.getElementById('visualizador-cifra');
+
+        editor.innerHTML = prepararHTMLParaEdicao(htmlFormatado);
+        editor.style.fontSize = tamanhoFonte + "px";
+
+        vis.innerHTML = htmlFormatado;
+        vis.style.fontSize = tamanhoFonte + "px";
+
+        editor.style.display = 'none';
+        document.getElementById('toolbar-editor').style.display = 'none';
+        document.getElementById('btn-salvar-cifra').style.display = 'none';
+        vis.style.display = 'block';
+
+        trocarTela('tela-editor-cifra');
+    }
+
+    function voltarDoEditor() {
+        if (contextoEdicao.indexEdicao === -1) trocarTela('selecao-criacao-pasta');
+        else abrirPasta(contextoEdicao.pasta);
+    }
+
+    function realizarPesquisa() {
+        let termo = document.getElementById('input-pesquisa').value.toLowerCase().trim();
+        let container = document.getElementById('resultado-pesquisa');
+        container.innerHTML = "";
+        if (!termo) return;
+
+        let resEncontrados = 0;
+        for (let pasta in bancoDeDados) {
+            if (pasta.toLowerCase().includes(termo)) {
+                resEncontrados++;
+                let div = document.createElement('div');
+                div.className = 'item-lista';
+                div.onclick = () => abrirPasta(pasta);
+                div.innerHTML = `<div class="item-lista-esquerda"><span style="margin-right: 15px;">📁</span> <span>${escaparHTML(pasta)}</span> <span style="font-size: 11px; background-color: #eee; padding: 3px 8px; border-radius: 10px; color: #666; margin-left: 10px;">Pasta</span></div>`;
+                container.appendChild(div);
+            }
+
+            bancoDeDados[pasta].forEach((musica, index) => {
+                if (musica.titulo.toLowerCase().includes(termo)) {
+                    resEncontrados++;
+                    let div = document.createElement('div');
+                    div.className = 'item-lista';
+                    div.onclick = () => abrirMusica(pasta, index);
+                    div.innerHTML = `<div class="item-lista-esquerda"><span style="margin-right: 15px;">🎵</span> <div><div>${escaparHTML(musica.titulo)}</div><div style="font-size: 12px; color: #888;">Na pasta: ${escaparHTML(pasta)}</div></div></div>`;
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        if (resEncontrados === 0) container.innerHTML = "<p style='text-align: center; color:#888;'>Nenhum resultado.</p>";
+    }
+
+    function fecharModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+
+    function abrirMenuPrincipal() {
+        document.getElementById('modal-menu-principal').style.display = 'flex';
+    }
+
+    function abrirOpcoes(tipo, pasta, index) {
+        contextoExportacao = { tipo: tipo, pasta: pasta, indexMusica: index };
+        let nomeAExibir = tipo === 'pasta' ? pasta : bancoDeDados[pasta][index].titulo;
+        document.getElementById('titulo-modal').innerText = "Opções: \n" + nomeAExibir;
+
+        let btnExcluir = document.getElementById('btn-excluir');
+        let btnRenomear = document.getElementById('btn-renomear');
+        let btnMover = document.getElementById('btn-mover');
+        let btnCopiar = document.getElementById('btn-copiar');
+
+        if (tipo === 'pasta') {
+            btnMover.style.display = 'none';
+            btnCopiar.style.display = 'none';
+            if (pasta === "Importados") {
+                btnExcluir.style.display = 'none';
+                btnRenomear.style.display = 'none';
+            } else {
+                btnExcluir.style.display = 'block';
+                btnRenomear.style.display = 'block';
+            }
+        } else {
+            btnMover.style.display = 'block';
+            btnCopiar.style.display = 'block';
+            btnExcluir.style.display = 'block';
+            btnRenomear.style.display = 'block';
+        }
+
+        document.getElementById('modal-opcoes').style.display = 'flex';
+    }
+
+    function excluirItem() {
+        fecharModal('modal-opcoes');
+        if (contextoExportacao.tipo === 'pasta') {
+            if (confirm(`Excluir a pasta "${contextoExportacao.pasta}"?`)) {
+                delete bancoDeDados[contextoExportacao.pasta];
+                salvarNoNavegador();
+                renderizarPastas();
+            }
+        } else {
+            if (confirm("Excluir a música?")) {
+                bancoDeDados[contextoExportacao.pasta].splice(contextoExportacao.indexMusica, 1);
+                salvarNoNavegador();
+                abrirPasta(contextoExportacao.pasta);
+            }
+        }
+    }
+
+    function renomearItem() {
+        fecharModal('modal-opcoes');
+        if (contextoExportacao.tipo === 'pasta') {
+            let novoNome = prompt("Novo nome:", contextoExportacao.pasta);
+            if (!novoNome || novoNome.trim() === "" || novoNome === contextoExportacao.pasta) return;
+            novoNome = novoNome.trim();
+            if (novoNome.toLowerCase() === "importados") return alert("Nome reservado.");
+            if (Object.keys(bancoDeDados).some(p => p.toLowerCase() === novoNome.toLowerCase())) return alert("Já existe!");
+
+            bancoDeDados[novoNome] = bancoDeDados[contextoExportacao.pasta];
+            delete bancoDeDados[contextoExportacao.pasta];
+            salvarNoNavegador();
+            renderizarPastas();
+        } else {
+            let musica = bancoDeDados[contextoExportacao.pasta][contextoExportacao.indexMusica];
+            let novoNome = prompt("Novo nome:", musica.titulo);
+            if (!novoNome || novoNome.trim() === "" || novoNome === musica.titulo) return;
+            novoNome = novoNome.trim();
+            if (bancoDeDados[contextoExportacao.pasta].some((m, i) => m.titulo.toLowerCase() === novoNome.toLowerCase() && i !== contextoExportacao.indexMusica)) return alert("Já existe!");
+
+            musica.titulo = novoNome;
+            salvarNoNavegador();
+            abrirPasta(contextoExportacao.pasta);
+        }
+    }
+
+    function abrirModalTransferencia(modo) {
+        fecharModal('modal-opcoes');
+        modoTransferencia = modo;
+
+        let select = document.getElementById('select-pasta-destino');
+        select.innerHTML = "";
+        let pastas = Object.keys(bancoDeDados).sort(sortAlfanumerico);
+
+        for (let p of pastas) {
+            if (p !== contextoExportacao.pasta) {
+                let op = document.createElement('option');
+                op.value = p;
+                op.text = p;
+                select.appendChild(op);
+            }
+        }
+
+        if (select.options.length === 0) return alert("Não há outras pastas.");
+
+        document.getElementById('titulo-modal-transferencia').innerText = modo === 'mover' ? 'Mover' : 'Copiar';
+        document.getElementById('btn-confirmar-transferencia').innerText = modo === 'mover' ? 'Mover' : 'Copiar';
+        document.getElementById('modal-transferir').style.display = 'flex';
+    }
+
+    function confirmarTransferencia() {
+        let pastaDestino = document.getElementById('select-pasta-destino').value;
+        let musicaOrigem = bancoDeDados[contextoExportacao.pasta][contextoExportacao.indexMusica];
+        if (bancoDeDados[pastaDestino].some(m => m.titulo.toLowerCase() === musicaOrigem.titulo.toLowerCase())) return alert("Já existe!");
+
+        let musicaCopia = JSON.parse(JSON.stringify(musicaOrigem));
+        bancoDeDados[pastaDestino].push(musicaCopia);
+        if (modoTransferencia === 'mover') bancoDeDados[contextoExportacao.pasta].splice(contextoExportacao.indexMusica, 1);
+
+        salvarNoNavegador();
+        fecharModal('modal-transferir');
+        abrirPasta(contextoExportacao.pasta);
+        alert("Sucesso!");
+    }
+
+    function baixarArquivo() {
+        let dadosParaBaixar = {};
+        let nomeDoArquivo = "";
+
+        if (contextoExportacao.tipo === 'pasta') {
+            dadosParaBaixar = { formatoCifrasApp: "pasta", nomePasta: contextoExportacao.pasta, musicas: bancoDeDados[contextoExportacao.pasta] };
+            nomeDoArquivo = contextoExportacao.pasta + "_Backup_Cifras.json";
+        } else {
+            let musica = bancoDeDados[contextoExportacao.pasta][contextoExportacao.indexMusica];
+            dadosParaBaixar = { formatoCifrasApp: "musicaUnica", musica: musica };
+            nomeDoArquivo = musica.titulo + "_Cifra.json";
+        }
+
+        let blob = new Blob([JSON.stringify(dadosParaBaixar, null, 2)], { type: "application/json" });
+        let url = URL.createObjectURL(blob);
+        let tagA = document.createElement("a");
+        tagA.href = url;
+        tagA.download = nomeDoArquivo;
+        tagA.click();
+        URL.revokeObjectURL(url);
+        fecharModal('modal-opcoes');
+    }
+
+    function iniciarImportacao() {
+        fecharModal('modal-menu-principal');
+        document.getElementById('input-importar').click();
+    }
+
+    function processarImportacao(event) {
+        let arquivo = event.target.files[0];
+        if (!arquivo) return;
+
+        let leitor = new FileReader();
+        leitor.onload = function(e) {
+            try {
+                let importado = JSON.parse(e.target.result);
+
+                if (importado.formatoCifrasApp === "musicaUnica") {
+                    let tituloImportado = importado.musica.titulo;
+                    let contador = 1;
+                    while (bancoDeDados["Importados"].some(m => m.titulo === tituloImportado)) {
+                        tituloImportado = importado.musica.titulo + ` (${contador})`;
+                        contador++;
+                    }
+                    importado.musica.titulo = tituloImportado;
+                    bancoDeDados["Importados"].push(importado.musica);
+                } else if (importado.formatoCifrasApp === "pasta") {
+                    let nomePasta = importado.nomePasta === "Importados" ? "Importados (Backup)" : importado.nomePasta;
+                    if (!bancoDeDados[nomePasta]) bancoDeDados[nomePasta] = [];
+                    for (let mus of importado.musicas) {
+                        if (!bancoDeDados[nomePasta].some(m => m.titulo === mus.titulo)) bancoDeDados[nomePasta].push(mus);
+                    }
+                } else {
+                    return alert("Formato antigo/incompatível.");
+                }
+
+                salvarNoNavegador();
+                renderizarPastas();
+                alert("Sucesso!");
+            } catch (erro) {
+                alert("Arquivo inválido.");
+            }
+        };
+
+        leitor.readAsText(arquivo);
+        event.target.value = '';
+    }
+
+    document.getElementById('editor-visual').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.execCommand('insertLineBreak', false, null);
+        }
+    });
+
+    salvarNoNavegador();
+    trocarTela('tela-inicial');
+    </script>
+</body>
+</html>
