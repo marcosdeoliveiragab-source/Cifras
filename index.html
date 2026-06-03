@@ -994,6 +994,14 @@
 
     salvarNoNavegador();
     trocarTela('tela-inicial');
+    // Código para registrar o Service Worker do PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('PWA ativo com sucesso!', reg))
+            .catch(err => console.log('Erro ao ativar PWA', err));
+    });
+}
     </script>
 </body>
 </html>
