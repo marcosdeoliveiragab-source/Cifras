@@ -183,13 +183,22 @@
         .icone-opcoes:hover { background: var(--btn-voltar-bg); color: var(--text-main); }
 
         #editor-visual, #visualizador-cifra {
-            width: 100%; min-height: 70vh; border: none;
-            font-family: 'Fira Code', 'Courier New', monospace; font-size: 16px; padding: 20px;
+            width: 100% !important; min-height: 70vh; border: none;
+            font-family: 'Fira Code', monospace;
+            font-weight: 400;
+            font-size: 16px; 
+            padding: 12px 6px 60px 6px;
             white-space: pre; overflow-x: auto; outline: none; background: var(--bg-tela);
-            box-sizing: border-box; line-height: 1.5; tab-size: 4; font-variant-ligatures: none;
+            box-sizing: border-box; line-height: 1.35; tab-size: 4; font-variant-ligatures: none;
             color: var(--text-main); border-radius: var(--radius-md); box-shadow: var(--shadow-sm);
             margin-bottom: 80px;
         }
+        @media (max-width: 600px) {
+            .container, .tela, #tela-visualizador, main {
+                padding-left: 4px !important;
+                padding-right: 4px !important;
+            }
+        }    
         #editor-visual { border: 2px solid var(--border-color); }
         #editor-visual:focus { border-color: var(--bg-header); }
         .acorde { color: var(--acorde-color); font-weight: 700; }
@@ -212,6 +221,7 @@
         [data-tema="escuro"] font[color="darkgreen"], [data-tema="escuro"] span[style*="color: darkgreen"], [data-tema="escuro"] span[style*="color:darkgreen"] { color: #10b981 !important; text-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
         [data-tema="escuro"] font[color="#4B0082"], [data-tema="escuro"] span[style*="color: rgb(75, 0, 130)"], [data-tema="escuro"] span[style*="color:#4B0082"], [data-tema="escuro"] span[style*="color: #4B0082"] { color: #a855f7 !important; text-shadow: 0 0 8px rgba(168, 85, 247, 0.4); }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <input type="file" id="input-importar" accept=".json" style="display: none;" onchange="processarImportacao(event)">
