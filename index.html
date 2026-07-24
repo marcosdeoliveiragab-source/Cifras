@@ -8,6 +8,7 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+
         :root {
             --bg-body: #f3f4f6;
             --bg-tela: #ffffff;
@@ -24,77 +25,77 @@
             --radius-md: 12px;
             --radius-lg: 16px;
         }
-
         [data-tema="escuro"] {
-            --bg-body: #111827;
-            --bg-tela: #1f2937;
-            --bg-header: #111827;
+            --bg-body: #0a111e;
+            --bg-tela: #0d1526;
+            --bg-header: #0a111e;
             --text-main: #f9fafb;
-            --border-color: #374151;
-            --btn-voltar-bg: #374151;
-            --toolbar-bg: #111827;
+            --border-color: #1e293b;
+            --btn-voltar-bg: #151e32;
+            --toolbar-bg: #0d1526;
             --acorde-color: #818cf8;
-            --text-muted: #9ca3af;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            margin: 0;
+            background-color: var(--bg-body);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        body { 
-            font-family: 'Inter', system-ui, sans-serif; 
-            margin: 0; 
-            background-color: var(--bg-body); 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            color: var(--text-main); 
-            transition: background-color 0.3s, color 0.3s; 
-        }
 
-        header { 
-            background-color: var(--bg-header); 
-            color: white; 
-            padding: 16px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
+        header {
+            background-color: var(--bg-header);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             box-shadow: var(--shadow-md);
             z-index: 10;
             font-weight: 600;
             font-size: 18px;
         }
 
-        header button { 
-            background: none; 
-            border: none; 
-            color: white; 
-            font-size: 20px; 
-            cursor: pointer; 
+
+        header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
             padding: 8px;
             border-radius: 8px;
             transition: background 0.2s;
         }
 
+
         header button:hover {
             background: rgba(255, 255, 255, 0.1);
         }
 
-        .tela { 
-            padding: 20px; 
-            flex: 1; 
-            overflow-y: auto; 
-            background-color: var(--bg-body); 
+
+        .tela {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            background-color: var(--bg-body);
         }
 
-        .btn-principal, .btn-acao, .btn-excluir, .btn-cancelar { 
-            border: none; 
-            padding: 16px; 
-            width: 100%; 
-            font-size: 16px; 
-            border-radius: var(--radius-md); 
-            cursor: pointer; 
-            margin-bottom: 12px; 
-            font-weight: 600; 
+
+        .btn-principal, .btn-acao, .btn-excluir, .btn-cancelar {
+            border: none;
+            padding: 16px;
+            width: 100%;
+            font-size: 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            margin-bottom: 12px;
+            font-weight: 600;
             box-shadow: var(--shadow-sm);
             transition: transform 0.1s, box-shadow 0.2s, filter 0.2s;
             display: flex;
@@ -103,13 +104,16 @@
             gap: 10px;
         }
 
+
         .btn-principal:active, .btn-acao:active { transform: scale(0.98); }
         .btn-principal:hover, .btn-acao:hover { filter: brightness(1.1); }
+
 
         .btn-principal { background-color: var(--bg-header); color: white; }
         .btn-acao { background-color: var(--bg-header); color: white; }
         .btn-excluir { background-color: #ef4444; color: white; }
         .btn-cancelar { background-color: var(--btn-voltar-bg); color: var(--text-main); border: 1px solid var(--border-color); }
+
 
         .btn-voltar {
             position: fixed;
@@ -135,58 +139,57 @@
             transition: opacity 0.2s;
         }
 
+
         .btn-voltar:hover {
             transform: translateY(-50%);
             opacity: 1;
         }
 
+
         .container-central { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 15px; max-width: 320px; margin: 0 auto; }
         .container-formulario { display: flex; flex-direction: column; max-width: 400px; margin: 0 auto; gap: 20px; background: var(--bg-tela); padding: 25px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
-        
+       
         .campo-grupo { display: flex; flex-direction: column; gap: 8px; }
         .campo-grupo label { font-weight: 600; font-size: 14px; color: var(--text-muted); }
-        .campo-grupo input, .campo-grupo select { 
-            padding: 14px; 
-            border: 1px solid var(--border-color); 
-            border-radius: var(--radius-md); 
-            font-size: 16px; 
-            outline: none; 
-            background-color: var(--bg-tela); 
-            color: var(--text-main); 
+        .campo-grupo input, .campo-grupo select {
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            outline: none;
+            background-color: var(--bg-tela);
+            color: var(--text-main);
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .campo-grupo input:focus, .campo-grupo select:focus {
             border-color: var(--bg-header);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
-
         .item-lista { 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
             padding: 16px 20px; 
             margin-bottom: 12px;
-            border-radius: var(--radius-md);
+            border-radius: 20px;
             background-color: var(--bg-tela);
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
             cursor: pointer; 
-            transition: transform 0.1s, box-shadow 0.2s;
         }
         .item-lista:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-md);
         }
-
         .item-lista-esquerda { display: flex; align-items: center; gap: 15px; }
         .icone-opcoes { color: var(--text-muted); padding: 5px 10px; font-size: 20px; cursor: pointer; border-radius: 50%; transition: background 0.2s; }
         .icone-opcoes:hover { background: var(--btn-voltar-bg); color: var(--text-main); }
+
 
         #editor-visual, #visualizador-cifra {
             width: 100% !important; min-height: 70vh; border: none;
             font-family: 'Fira Code', monospace;
             font-weight: 400;
-            font-size: 16px; 
+            font-size: 16px;
             padding: 12px 6px 60px 6px;
             white-space: pre; overflow-x: auto; outline: none; background: var(--bg-tela);
             box-sizing: border-box; line-height: 1.35; tab-size: 4; font-variant-ligatures: none;
@@ -202,19 +205,22 @@
         #editor-visual { border: 2px solid var(--border-color); }
         #editor-visual:focus { border-color: var(--bg-header); }
         .acorde { color: var(--acorde-color); font-weight: 700; }
-        
+       
         .modal-fundo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-caixa { background-color: var(--bg-tela); padding: 25px; border-radius: var(--radius-lg); width: 90%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; color: var(--text-main); box-shadow: var(--shadow-lg); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
+
         .grade-tons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 15px 0; }
         .grade-tons .btn-acao { padding: 12px 0; margin: 0; font-size: 15px; }
 
+
         .btn-toolbar { width: 40px; height: 40px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-tela); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-main); transition: background 0.2s; }
         .btn-toolbar:hover { background: var(--border-color); }
-        
+       
         #input-pesquisa { width: 100%; padding: 16px; margin-bottom: 25px; box-sizing: border-box; border-radius: var(--radius-md); border: 1px solid var(--border-color); font-size: 16px; box-shadow: var(--shadow-sm); background-color: var(--bg-tela); color: var(--text-main); outline: none; }
         #input-pesquisa:focus { border-color: var(--bg-header); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+
 
         [data-tema="escuro"] font[color="black"], [data-tema="escuro"] font[color="#000000"], [data-tema="escuro"] span[style*="color: black"], [data-tema="escuro"] span[style*="color:black"], [data-tema="escuro"] span[style*="color: #000000"], [data-tema="escuro"] span[style*="color:#000000"], [data-tema="escuro"] span[style*="rgb(0, 0, 0)"], [data-tema="escuro"] button[title="Preto"] { color: #f9fafb !important; }
         [data-tema="escuro"] font[color="red"], [data-tema="escuro"] span[style*="color: red"], [data-tema="escuro"] span[style*="color:red"] { color: #ef4444 !important; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
@@ -225,33 +231,102 @@
 </head>
 <body>
     <input type="file" id="input-importar" accept=".json" style="display: none;" onchange="processarImportacao(event)">
-    <header>
-        <div style="display:flex; align-items:center; gap:10px;"><button onclick="abrirMenuPrincipal()"><i class="fa-solid fa-bars"></i></button> Cifras</div>
-        <div id="header-acoes-padrao" style="display: flex; gap: 8px; align-items: center;">
-            <button onclick="alternarTema()" title="Mudar Tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
-            <button onclick="trocarTela('selecao-criacao-pasta')"><i class="fa-solid fa-plus"></i></button>
-            <button onclick="trocarTela('pesquisa')"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <header style="background: var(--bg-body); box-shadow: none; padding: 20px;">
+    <div style="display:flex; align-items:center; gap:15px;">
+        <button onclick="abrirMenuPrincipal()" style="color: var(--text-main); font-size: 22px; padding: 0;"><i class="fa-solid fa-bars"></i></button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <i class="fa-solid fa-music" style="color: #3b82f6; font-size: 28px; filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));"></i>
+            <div style="display: flex; flex-direction: column;">
+                <span style="font-weight: 700; font-size: 20px; line-height: 1.2; color: var(--text-main);">Cifras</span>
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 400;">Repertório da Banda</span>
+            </div>
         </div>
-        <div id="header-acoes-editor" style="display: none; gap: 8px; align-items: center;">
-            <button onclick="alternarTema()" title="Mudar Tema"><i class="fa-solid fa-circle-half-stroke"></i></button>
-            <button onclick="abrirModalTom()" style="font-weight: bold;" title="Mudar tom"><i class="fa-solid fa-music"></i></button>
-            <button onclick="alterarFonte(-2)" style="font-weight: bold;" title="Diminuir Fonte"><i class="fa-solid fa-minus"></i></button>
-            <button onclick="alterarFonte(2)" style="font-weight: bold;" title="Aumentar Fonte"><i class="fa-solid fa-plus"></i></button>
-            <button onclick="salvarCifra()" style="margin-left: 5px;" id="btn-salvar-cifra" title="Salvar"><i class="fa-solid fa-floppy-disk"></i></button>
-        </div>
-    </header>
-    <div id="tela-inicial" class="tela">
-        <div id="lista-pastas-container"></div>
     </div>
-    <div id="selecao-criacao-pasta" class="tela" style="display: none;">
-        <button class="btn-voltar" onclick="trocarTela('tela-inicial')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+    <div id="header-acoes-padrao" style="display: flex; gap: 10px; align-items: center;">
+        <button onclick="alternarTema()" title="Mudar Tema" style="background: var(--bg-tela); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-moon"></i></button>
+        <button onclick="trocarTela('pesquisa')" title="Pesquisar" style="background: var(--bg-tela); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button onclick="trocarTela('selecao-criacao-pasta')" title="Nova Cifra" style="background: var(--bg-tela); color: var(--text-main); border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div id="header-acoes-editor" style="display: none; gap: 8px; align-items: center;">
+        <button onclick="alternarTema()" title="Mudar Tema" style="color: var(--text-main);"><i class="fa-solid fa-moon"></i></button>
+        <button onclick="abrirModalTom()" title="Mudar tom" style="color: var(--text-main);"><i class="fa-solid fa-music"></i></button>
+        <button onclick="alterarFonte(-2)" title="Diminuir Fonte" style="color: var(--text-main);"><i class="fa-solid fa-minus"></i></button>
+        <button onclick="alterarFonte(2)" title="Aumentar Fonte" style="color: var(--text-main);"><i class="fa-solid fa-plus"></i></button>
+        <button onclick="salvarCifra()" style="margin-left: 5px; color: var(--text-main);" id="btn-salvar-cifra" title="Salvar"><i class="fa-solid fa-floppy-disk"></i></button>
+    </div>
+</header>
+    <div id="tela-inicial" class="tela">
+        <div style="position: relative; margin-bottom: 25px;" onclick="trocarTela('pesquisa')">
+            <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+            <input type="text" placeholder="Buscar por música, autor ou repertório..." style="width: 100%; margin: 0; padding: 16px 16px 16px 45px; box-sizing: border-box; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--bg-tela); color: var(--text-main); font-size: 15px; outline: none; cursor: pointer;" readonly>
+        </div>
+
+        <div style="display: flex; background: var(--bg-tela); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 25px;">
+            
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span style="font-size: 24px; color: #3b82f6;"><i class="fa-solid fa-folder"></i></span>
+                <div>
+                    <div id="contador-pastas" style="font-weight: 700; font-size: 16px; color: #3b82f6;">0</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Repertórios</div>
+                </div>
+            </div>
+
+            <div style="width: 1px; background-color: var(--border-color); margin: 0 5px;"></div>
+
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span style="font-size: 24px; color: #8b5cf6;"><i class="fa-solid fa-guitar"></i></span>
+                <div>
+                    <div id="contador-musicas" style="font-weight: 700; font-size: 16px; color: #8b5cf6;">0</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Músicas</div>
+                </div>
+            </div>
+
+            <div style="width: 1px; background-color: var(--border-color); margin: 0 5px;"></div>
+
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                <span style="font-size: 24px; color: #fbbf24;"><i class="fa-solid fa-sd-card"></i></span>
+                <div>
+                    <div id="contador-memoria" style="font-weight: 700; font-size: 16px; color: #fbbf24;">0%</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Espaço</div>
+                </div>
+            </div>
+
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-weight: 600; font-size: 16px;">
+            <i class=""></i> Repertórios
+        </div>
+        <div id="lista-pastas-container"></div>
+        <style>
+        @keyframes flutuar {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        .bloco-ad-flutuante {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 50px;
+            margin-bottom: 25px;
+            animation: flutuar 4s ease-in-out infinite;
+        }
+        </style>
+        <div class="bloco-ad-flutuante">
+                <div style="background: var(--bg-tela); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm);">
+                    AD Uma vida com Deus Filial de Aparecida/SP
+                </div>
+            </div>
+        </div>
+        <div id="selecao-criacao-pasta" class="tela" style="display: none;">
+        <button class="btn-voltar" style="position: relative !important; margin-bottom: 20px !important; left: 0 !important; bottom: 0 !important; display: inline-block !important;" onclick="trocarTela('tela-inicial')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
         <div class="container-central">
             <button class="btn-principal" onclick="prepararCriacao('nova')"><i class="fa-solid fa-folder-plus"></i> Criar nova pasta</button>
             <button class="btn-principal" style="background-color: var(--btn-voltar-bg); color: var(--text-main); border: 2px solid var(--border-color);" onclick="prepararCriacao('existente')"><i class="fa-solid fa-folder-open"></i> Selecionar pasta existente</button>
         </div>
     </div>
     <div id="tela-criar-pasta" class="tela" style="display: none;">
-        <button class="btn-voltar" onclick="trocarTela('selecao-criacao-pasta')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+        <button class="btn-voltar" style="position: relative !important; margin-bottom: 20px !important; left: 0 !important; bottom: 0 !important; display: inline-block !important;" onclick="trocarTela('selecao-criacao-pasta')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
         <div class="container-formulario">
             <div id="div-nome-pasta" class="campo-grupo">
                 <label>Nome da nova pasta</label>
@@ -267,7 +342,7 @@
             </div>
             <button class="btn-acao" onclick="iniciarEditor()" style="margin-top: 10px;"><i class="fa-solid fa-pen"></i> Criar cifra</button>
         </div>
-    </div>
+    </div>    
     <div id="tela-musicas-pasta" class="tela" style="display: none;">
         <button class="btn-voltar" onclick="trocarTela('tela-inicial')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
         <h2 id="titulo-pasta-atual" style="margin-top: 0; margin-bottom: 20px; font-size: 24px;"></h2>
@@ -761,6 +836,7 @@
     function abrirPasta(nome) { aplicarPastaVisual(nome); }
     function abrirMusica(pasta, index) { aplicarMusicaVisual(pasta, index); }
     renderizarPastas();
+    
     aplicarTelaVisual('tela-inicial');
     function aplicarTelaVisual(idDaTela) {
         document.querySelectorAll('.tela').forEach(t => t.style.display = 'none');
@@ -875,14 +951,43 @@
         let container = document.getElementById('lista-pastas-container'); container.innerHTML = "";
         let pastas = Object.keys(bancoDeDados).sort(sortAlfanumerico).filter(n => n !== "Importados");
         pastas.unshift("Importados");
+
+        let totalMusicas = 0;
+        pastas.forEach(p => totalMusicas += (bancoDeDados[p] || []).length);
+        
+        let elPastas = document.getElementById('contador-pastas');
+        if (elPastas) elPastas.innerText = pastas.length;
+        
+        let elMusicas = document.getElementById('contador-musicas');
+        if (elMusicas) elMusicas.innerText = totalMusicas;
+
+        let elMemoria = document.getElementById('contador-memoria');
+        if (elMemoria) {
+            let uso = Math.round((JSON.stringify(localStorage).length / 5242880) * 100);
+            elMemoria.innerText = (uso < 1 ? "<1" : uso) + "%";
+        }
+
         pastas.forEach(nome => {
             if (!Array.isArray(bancoDeDados[nome])) bancoDeDados[nome] = [];
             let div = document.createElement('div'); div.className = 'item-lista';
             div.onclick = function() { abrirPasta(nome); };
-            div.innerHTML = `<div class="item-lista-esquerda"><span style="font-size: 20px; color: #fbbf24;"><i class="fa-solid fa-folder"></i></span><div><div style="font-weight: 600;">${escaparHTML(nome)}</div><div style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">${bancoDeDados[nome].length} música(s)</div></div></div>`;
-            let op = document.createElement('span'); op.className = 'icone-opcoes'; op.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i>';
-            op.onclick = function(e) { e.stopPropagation(); abrirOpcoes('pasta', nome, -1); };
-            div.appendChild(op); container.appendChild(div);
+            
+            div.innerHTML = `
+                <div class="item-lista-esquerda">
+                    <div style="background: rgba(255, 255, 255, 0.06); width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                        <i class="fa-solid fa-folder" style="font-size: 32px; color: #fbbf24;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 16px;">${escaparHTML(nome)}</div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;"><i class="fa-solid fa-music" style="color: #818cf8; font-size: 11px;"></i> ${bancoDeDados[nome].length} música(s)</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <span class="icone-opcoes" onclick="event.stopPropagation(); abrirOpcoes('pasta', '${nome}', -1)"><i class="fa-solid fa-ellipsis-vertical"></i></span>
+                    <i class="fa-solid fa-chevron-right" style="color: var(--text-muted); font-size: 14px;"></i>
+                </div>
+            `;
+            container.appendChild(div);
         });
     }
     function realizarPesquisa() {
@@ -1026,7 +1131,7 @@
     document.getElementById('editor-visual').addEventListener('input', function() { tomOriginal = null; ajustarFonteAutomaticamente(); });
     window.addEventListener('resize', function() { ajustarFonteAutomaticamente(); });
     window.addEventListener('orientationchange', function() { setTimeout(() => ajustarFonteAutomaticamente(), 250); });
-    
+   
     async function carregarCifrasAutomaticas() {
         try {
             const resposta = await fetch('backup.json?v=' + new Date().getTime());
