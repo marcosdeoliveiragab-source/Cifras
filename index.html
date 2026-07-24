@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cifras</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         :root {
             --bg-body: #f3f4f6;
@@ -828,7 +830,23 @@
             let divMusica = document.createElement('div');
             divMusica.className = 'item-lista';
             divMusica.onclick = function() { abrirMusica(nomeDaPasta, i); };
-            divMusica.innerHTML = `<div class="item-lista-esquerda"><span style="color: var(--text-muted);"><i class="fa-solid fa-music"></i></span> <span style="font-weight: 500;">${escaparHTML(m.titulo)}</span></div>`;
+
+            // Descobre o tom diretamente da cifra salva na música
+            let tom = descobrirTomDaMusica(m.letra);
+            let tagTom = tom ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;"><span style="border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 6px; font-weight: 600; font-size: 11px; background: rgba(255, 255, 255, 0.03);">◇ ${tom}</span></div>` : '';
+
+            divMusica.innerHTML = `
+                <div class="item-lista-esquerda">
+                    <div style="background: rgba(59, 130, 246, 0.12); width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(59, 130, 246, 0.25);">
+                        <i class="fa-solid fa-music" style="font-size: 20px; color: #3b82f6; filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6));"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 600; font-size: 16px; color: var(--text-main);">${escaparHTML(m.titulo)}</div>
+                        ${tagTom}
+                    </div>
+                </div>
+            `;
+
             let iconeOpcoes = document.createElement('span');
             iconeOpcoes.className = 'icone-opcoes';
             iconeOpcoes.innerHTML = '<i class="fa-solid fa-ellipsis-vertical"></i>';
@@ -1105,12 +1123,26 @@
             const resposta = await fetch('backup.json?v=' + new Date().getTime());
             if (!resposta.ok) return;
             const dados = await resposta.json();
+            
             if (dados && dados.banco) {
-                const bancoTexto = JSON.stringify(dados.banco);
+                // 1. Prepara o backup novo
+                const bancoNovo = JSON.stringify(dados.banco);
+                
+                // 2. Prepara o backup que já está no celular da pessoa de forma limpa
+                let bancoAtualNormalizado = "";
                 const bancoAtual = localStorage.getItem('appCifras');
-                if (bancoAtual !== bancoTexto) {
-                    localStorage.setItem('appCifras', bancoTexto);
-                    location.reload();
+                if (bancoAtual) {
+                    try {
+                        bancoAtualNormalizado = JSON.stringify(JSON.parse(bancoAtual));
+                    } catch (e) {
+                        bancoAtualNormalizado = "";
+                    }
+                }
+
+                // 3. Comparação inteligente: Só recarrega a página SE realmente houver uma nova atualização no GitHub
+                if (bancoAtualNormalizado !== bancoNovo) {
+                    localStorage.setItem('appCifras', bancoNovo);
+                    location.reload(); 
                 }
             }
         } catch (erro) {
