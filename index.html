@@ -281,6 +281,30 @@
             margin-bottom: 25px;
             animation: flutuar 4s ease-in-out infinite;
         }
+        /* ========================================= */
+        /* MODO APENAS LEITURA (MODO BANDA)          */
+        /* ========================================= */
+        
+        /* Esconde o botão de "+" (Nova Cifra/Pasta) do cabeçalho */
+        button[onclick="trocarTela('selecao-criacao-pasta')"],
+        
+        /* Esconde o botão de Importar (para ninguém sobrescrever o banco) */
+        button[onclick="iniciarImportacao()"],
+        
+        /* Esconde os "3 pontinhos" de opções nas listas de pastas e músicas */
+        .icone-opcoes,
+        
+        /* Esconde os botões de ação dentro dos modais, garantindo a segurança */
+        #btn-renomear,
+        #btn-mover,
+        #btn-copiar,
+        #btn-excluir,
+        
+        /* Esconde o botão de salvar caso o editor seja aberto de alguma forma */
+        #btn-salvar-cifra {
+            display: none !important;
+        }
+        /* ========================================= */
         </style>
         <div class="bloco-ad-flutuante">
                 <div style="background: var(--bg-tela); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm);">
@@ -331,7 +355,7 @@
             <span style="font-size: 13px; color: var(--text-muted); margin-left: auto;">Selecione o texto para formatar</span>
         </div>
         <div id="editor-visual" contenteditable="true" spellcheck="false" style="display: none;"></div>
-        <div id="visualizador-cifra" ondblclick="editarCifra()" title="Dê 2 cliques para editar"></div>
+        <div id="visualizador-cifra"></div>
     </div>
     <div id="pesquisa" class="tela" style="display: none;">
         <button class="btn-voltar" onclick="trocarTela('tela-inicial')"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
@@ -935,8 +959,11 @@
     }
     function renderizarPastas() {
         let container = document.getElementById('lista-pastas-container'); container.innerHTML = "";
+        
+        // Pega todas as pastas e já remove a "Importados"
         let pastas = Object.keys(bancoDeDados).sort(sortAlfanumerico).filter(n => n !== "Importados");
-        pastas.unshift("Importados");
+        
+        // A linha "pastas.unshift("Importados");" foi removida daqui!
 
         let totalMusicas = 0;
         pastas.forEach(p => totalMusicas += (bancoDeDados[p] || []).length);
