@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        
         :root {
             --bg-body: #f3f4f6;
             --bg-tela: #ffffff;
@@ -183,7 +182,6 @@
         #editor-visual { border: 2px solid var(--border-color); }
         #editor-visual:focus { border-color: var(--bg-header); }
         .acorde { color: var(--acorde-color); font-weight: 700; }
-       
         .modal-fundo { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
         .modal-caixa { background-color: var(--bg-tela); padding: 25px; border-radius: var(--radius-lg); width: 90%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; color: var(--text-main); box-shadow: var(--shadow-lg); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -203,13 +201,14 @@
 <body>
     <input type="file" id="input-importar" accept=".json" style="display: none;" onchange="processarImportacao(event)">
     <header style="background: var(--bg-body); box-shadow: none; padding: 20px;">
-    <div style="display:flex; align-items:center; gap:15px;">
-        <button onclick="abrirMenuPrincipal()" style="color: var(--text-main); font-size: 22px; padding: 0;"><i class="fa-solid fa-bars"></i></button>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <i class="fa-solid fa-music" style="color: #3b82f6; font-size: 28px; filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));"></i>
-            <div style="display: flex; flex-direction: column;">
-                <span style="font-weight: 700; font-size: 20px; line-height: 1.2; color: var(--text-main);">Cifras</span>
-                <span style="font-size: 13px; color: var(--text-muted); font-weight: 400;">Repertório da Banda</span>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button onclick="abrirMenuPrincipal()" style="color: var(--text-main); font-size: 22px; padding: 0;"><i class="fa-solid fa-bars"></i></button>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fa-solid fa-music" style="color: #3b82f6; font-size: 28px; filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));"></i>
+                <div style="display: flex; flex-direction: column;">
+                    <span style="font-weight: 700; font-size: 20px; line-height: 1.2; color: var(--text-main);">Cifras</span>
+                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 400;">Repertório da Banda</span>
+                </div>
             </div>
         </div>
     </div>
@@ -233,7 +232,6 @@
         </div>
         
         <div style="display: flex; background: var(--bg-tela); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 25px;">
-            
             <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
                 <span style="font-size: 24px; color: #3b82f6;"><i class="fa-solid fa-folder"></i></span>
                 <div>
@@ -255,13 +253,14 @@
             <div style="width: 1px; background-color: var(--border-color); margin: 0 5px;"></div>
 
             <div style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <span style="font-size: 24px; color: #fbbf24;"><i class="fa-solid fa-sd-card"></i></span>
+                <span style="font-size: 24px; color: #fbbf24;"><i class="fa-solid fa-cloud-arrow-up"></i></span>
                 <div>
-                    <div id="contador-memoria" style="font-weight: 700; font-size: 16px; color: #fbbf24;">0%</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">Espaço</div>
+                    <div id="contador-memoria" style="font-weight: 700; font-size: 16px; color: #fbbf24;">Sincronizado</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">Github</div>
                 </div>
             </div>
         </div>
+
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; font-weight: 600; font-size: 16px;">
             <i class=""></i> Pastas
         </div>
@@ -281,30 +280,18 @@
             margin-bottom: 25px;
             animation: flutuar 4s ease-in-out infinite;
         }
-        /* ========================================= */
-        /* MODO APENAS LEITURA (MODO BANDA)          */
-        /* ========================================= */
         
-        /* Esconde o botão de "+" (Nova Cifra/Pasta) do cabeçalho */
         button[onclick="trocarTela('selecao-criacao-pasta')"],
-        
-        /* Esconde o botão de Importar (para ninguém sobrescrever o banco) */
         button[onclick="iniciarImportacao()"],
-        
-        /* Esconde os "3 pontinhos" de opções nas listas de pastas e músicas */
         .icone-opcoes,
-        
-        /* Esconde os botões de ação dentro dos modais, garantindo a segurança */
         #btn-renomear,
         #btn-mover,
         #btn-copiar,
         #btn-excluir,
-        
-        /* Esconde o botão de salvar caso o editor seja aberto de alguma forma */
         #btn-salvar-cifra {
             display: none !important;
         }
-        /* ========================================= */
+        
         </style>
         <div class="bloco-ad-flutuante">
                 <div style="background: var(--bg-tela); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; text-align: center; color: var(--text-muted); font-size: 12px; font-weight: 600; box-shadow: var(--shadow-sm);">
@@ -424,7 +411,17 @@
         }
         localStorage.setItem('temaCifras', novoTema);
     }
-    let bancoDeDados = carregarBancoDeDados();
+    
+    let bancoDeDados = {};
+    const salvoLocal = localStorage.getItem('appCifras');
+    if (salvoLocal) {
+        try {
+            bancoDeDados = JSON.parse(salvoLocal);
+        } catch (e) {
+            bancoDeDados = {};
+        }
+    }
+
     let contextoEdicao = { pasta: "", musicaTitulo: "", indexEdicao: -1 };
     let contextoExportacao = { tipo: "", pasta: "", indexMusica: -1 };
     let modoTransferencia = 'mover';
@@ -440,13 +437,9 @@
     const tagsInlinePermitidas = new Set(['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'span', 'font', 'small', 'big', 'sub', 'sup', 'mark']);
     const tagsDescartadas = new Set(['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'svg', 'math', 'img', 'video', 'audio', 'canvas', 'form', 'input', 'button', 'select', 'textarea']);
     const propriedadesCSSPermitidas = new Set(['color', 'background-color', 'font-size', 'font-weight', 'font-style', 'text-decoration']);
+    
     bancoDeDados = normalizarBancoDeDados(bancoDeDados);
-    function carregarBancoDeDados() {
-        try {
-            let dados = JSON.parse(localStorage.getItem('appCifras')) || {};
-            return dados && typeof dados === 'object' && !Array.isArray(dados) ? dados : {};
-        } catch (erro) { return {}; }
-    }
+    
     function limparNomeVisivel(valor, fallback) {
         let texto = String(valor == null ? '' : valor).replace(/[\r\n]+/g, ' ').trim();
         return texto || fallback;
@@ -590,15 +583,8 @@
         return null;
     }
     function salvarNoNavegador() {
-        try {
-            for (let pasta in bancoDeDados) {
-                if (!Array.isArray(bancoDeDados[pasta])) bancoDeDados[pasta] = [];
-                bancoDeDados[pasta].sort((a, b) => sortAlfanumerico(a.titulo, b.titulo));
-            }
-            localStorage.setItem('appCifras', JSON.stringify(bancoDeDados));
-        } catch (erro) {
-            alert("⚠️ Memória cheia! Exporte um backup imediatamente para não perder dados. Apague pastas antigas antes de salvar novas músicas.");
-        }
+        // Desativado para usar apenas o backup.json na nuvem
+        return;
     }
     function atualizarIndiceEdicao() {
         let musicas = bancoDeDados[contextoEdicao.pasta];
@@ -959,11 +945,8 @@
     }
     function renderizarPastas() {
         let container = document.getElementById('lista-pastas-container'); container.innerHTML = "";
-        
         // Pega todas as pastas e já remove a "Importados"
         let pastas = Object.keys(bancoDeDados).sort(sortAlfanumerico).filter(n => n !== "Importados");
-        
-        // A linha "pastas.unshift("Importados");" foi removida daqui!
 
         let totalMusicas = 0;
         pastas.forEach(p => totalMusicas += (bancoDeDados[p] || []).length);
@@ -973,12 +956,6 @@
         
         let elMusicas = document.getElementById('contador-musicas');
         if (elMusicas) elMusicas.innerText = totalMusicas;
-
-        let elMemoria = document.getElementById('contador-memoria');
-        if (elMemoria) {
-            let uso = Math.round((JSON.stringify(localStorage).length / 5242880) * 100);
-            elMemoria.innerText = (uso < 1 ? "<1" : uso) + "%";
-        }
 
         pastas.forEach(nome => {
             if (!Array.isArray(bancoDeDados[nome])) bancoDeDados[nome] = [];
@@ -1152,10 +1129,7 @@
             const dados = await resposta.json();
             
             if (dados && dados.banco) {
-                // 1. Prepara o backup novo
                 const bancoNovo = JSON.stringify(dados.banco);
-                
-                // 2. Prepara o backup que já está no celular da pessoa de forma limpa
                 let bancoAtualNormalizado = "";
                 const bancoAtual = localStorage.getItem('appCifras');
                 if (bancoAtual) {
@@ -1165,11 +1139,11 @@
                         bancoAtualNormalizado = "";
                     }
                 }
-
-                // 3. Comparação inteligente: Só recarrega a página SE realmente houver uma nova atualização no GitHub
-                if (bancoAtualNormalizado !== bancoNovo) {
+                // Se houver atualização no backup.json ou se o banco local estiver vazio
+                if (bancoAtualNormalizado !== bancoNovo || Object.keys(bancoDeDados).length === 0) {
                     localStorage.setItem('appCifras', bancoNovo);
-                    location.reload(); 
+                    bancoDeDados = normalizarBancoDeDados(dados.banco);
+                    renderizarPastas();
                 }
             }
         } catch (erro) {
