@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Cifras</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+
+  <!-- Tela de Login (Apenas visível se não autenticado) -->
+  <div id="telaLogin" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+    <div class="modal-box" style="width: 100%;">
+      <span class="material-icons-round" style="font-size: 48px; color: #3b82f6; margin-bottom: 10px;">lock</span>
+      <h3>Acesso Admin</h3>
+      <p>Área restrita de edição</p>
+      <input type="password" id="inputSenha" class="input-moderno" placeholder="Senha" onkeydown="tratarTeclaEnter(event)">
+      <button onclick="autenticar()" class="btn btn-primary" style="width: 100%; justify-content: center;">Entrar</button>
+      <br><br>
+      <a href="index.html" style="font-size: 13px; color: #6b7280; text-decoration: none;">← Voltar para as Cifras</a>
+    </div>
+  </div>
+
+
+  <!-- Conteúdo Admin -->
+  <div id="conteudoAdmin" style="display: none;">
+   
+    <header class="navbar">
+      <div class="nav-left">
+        <div class="brand">
+          <div class="logo-icon" style="background: #fef3c7; color: #d97706;">
+            <span class="material-icons-round">admin_panel_settings</span>
+          </div>
+          <div class="brand-text">
+            <h1>Painel Admin</h1>
+            <span>Gestão de Repertório</span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="index.html" class="btn"><span class="material-icons-round" style="font-size: 18px;">home</span> Ver Site</a>
+        <button onclick="sairAdmin()" class="btn"><span class="material-icons-round" style="font-size: 18px;">logout</span> Sair</button>
+      </div>
+    </header>
+
+
+    <div class="container" style="max-width: 1100px;">
+     
+      <div class="cabecalho-secao" style="justify-content: flex-end; margin-bottom: 15px;">
+        <button onclick="baixarBackup()" class="btn btn-primary"><span class="material-icons-round" style="font-size: 18px;">download</span> Salvar Backup (JSON)</button>
+      </div>
+
+
+      <div class="admin-layout">
+        <!-- Barra Lateral -->
+        <aside class="sidebar-admin">
+          <button onclick="criarPasta()" class="btn btn-success" style="width: 100%; justify-content: center; margin-bottom: 10px;">
+            <span class="material-icons-round" style="font-size: 18px;">create_new_folder</span> Nova Pasta
+          </button>
+          <div id="listaNavegacao">Carregando...</div>
+        </aside>
+
+
+        <!-- Área de Edição Principal -->
+        <main class="painel-edicao" id="painelEdicao">
+          <div style="text-align: center; color: #9ca3af; padding: 50px 0;">
+            <span class="material-icons-round" style="font-size: 64px;">edit_document</span>
+            <p>Selecione uma pasta ou música ao lado para editar.</p>
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    const SENHA_CORRETA = '10022006';
+    let dadosApp = [];
+    let pastaSelecionada = null;
+    let musicaSelecionada = null;
+
+
+    const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+
+    function verificarAutenticacao() {
+      if (sessionStorage.getItem('adminAutenticado') === 'true') {
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('conteudoAdmin').style.display = 'block';
+        carregarDadosAdmin();
+      }
+    }
+
+
+    function autenticar() {
+      const senhaDigitada = document.getElementById('inputSenha').value;
+      if (senhaDigitada === SENHA_CORRETA) {
+        sessionStorage.setItem('adminAutenticado', 'true');
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('conteudoAdmin').style.display = 'block';
+        carregarDadosAdmin();
+      } else {
+        alert('Senha incorreta!');
+        document.getElementById('inputSenha').value = '';
+      }
+    }
+
+
+    function tratarTeclaEnter(event) { if (event.key === 'Enter') autenticar(); }
+
+
+    function sairAdmin() {
+      sessionStorage.removeItem('adminAutenticado');
+      window.location.reload();
+    }
+
+
+    async function carregarDadosAdmin() {
+      const salvo = localStorage.getItem('dadosCifras');
+      if (salvo) {
+        dadosApp = JSON.parse(salvo);
+        renderizarNavegacao();
+      } else {
+        try {
+          const resposta = await fetch('backup.json');
+          dadosApp = await resposta.json();
+          salvarLocal();
+          renderizarNavegacao();
+        } catch (erro) { alert('Erro ao carregar os dados do arquivo backup.json'); }
+      }
+    }
+
+
+    function salvarLocal() { localStorage.setItem('dadosCifras', JSON.stringify(dadosApp, null, 2)); }
+
+
+    function baixarBackup() {
+      salvarLocal();
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosApp, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "backup.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+
+    function renderizarNavegacao() {
+      const nav = document.getElementById('listaNavegacao');
+      let html = '';
+
+
+      dadosApp.forEach((pasta, pIdx) => {
+        html += `
+          <div class="pasta-admin-item">
+            <div class="pasta-admin-header">
+              <span style="display: flex; align-items: center; gap: 5px;"><span class="material-icons-round" style="color: #ca8a04; font-size:18px">folder</span> ${pasta.nome}</span>
+              <div style="display:flex; gap: 5px;">
+                <button onclick="editarPasta(${pIdx})" class="icon-btn" title="Renomear"><span class="material-icons-round" style="font-size:16px;">edit</span></button>
+                <button onclick="excluirPasta(${pIdx})" class="icon-btn" title="Excluir Pasta"><span class="material-icons-round" style="font-size:16px; color:#ef4444">delete</span></button>
+              </div>
+            </div>
+           
+            <div style="margin-top: 10px;">
+              ${pasta.musicas.map(musica => {
+                const ativa = (musicaSelecionada && musicaSelecionada.id === musica.id) ? 'ativa' : '';
+                return `
+                  <div class="musica-admin-item ${ativa}" onclick="selecionarMusica(${pIdx}, '${musica.id}')">
+                    <span style="display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:14px">music_note</span> ${musica.titulo}</span>
+                  </div>
+                `;
+              }).join('')}
+              <button onclick="criarMusica(${pIdx})" class="btn" style="font-size: 12px; margin-top: 8px; width: 100%; justify-content: center; padding: 4px;">+ Adicionar Música</button>
+            </div>
+          </div>
+        `;
+      });
+
+
+      nav.innerHTML = html;
+    }
+
+
+    function criarPasta() {
+      const nome = prompt('Nome da nova pasta:');
+      if (nome && nome.trim()) {
+        dadosApp.push({ nome: nome.trim(), musicas: [] });
+        salvarLocal(); renderizarNavegacao();
+      }
+    }
+
+
+    function editarPasta(pIdx) {
+      const novoNome = prompt('Novo nome da pasta:', dadosApp[pIdx].nome);
+      if (novoNome && novoNome.trim()) {
+        dadosApp[pIdx].nome = novoNome.trim();
+        salvarLocal(); renderizarNavegacao();
+      }
+    }
+
+
+    function excluirPasta(pIdx) {
+      if (confirm(`Excluir a pasta "${dadosApp[pIdx].nome}" e todas as suas músicas?`)) {
+        dadosApp.splice(pIdx, 1);
+        musicaSelecionada = null;
+        salvarLocal(); renderizarNavegacao();
+        document.getElementById('painelEdicao').innerHTML = '<p style="text-align:center; color:#9ca3af; padding:50px">Selecione uma pasta ou música ao lado para editar.</p>';
+      }
+    }
+
+
+    function criarMusica(pIdx) {
+      const titulo = prompt('Título da nova música:');
+      if (titulo && titulo.trim()) {
+        const novaMusica = { id: 'm_' + Date.now(), titulo: titulo.trim(), tom: 'C', conteudo: 'Cole a cifra aqui...' };
+        dadosApp[pIdx].musicas.push(novaMusica);
+        salvarLocal(); renderizarNavegacao();
+        selecionarMusica(pIdx, novaMusica.id);
+      }
+    }
+
+
+    function selecionarMusica(pIdx, mId) {
+      pastaSelecionada = pIdx;
+      musicaSelecionada = dadosApp[pIdx].musicas.find(m => m.id === mId);
+      renderizarNavegacao();
+
+
+      if (!musicaSelecionada) return;
+
+
+      const opcoesTom = NOTAS.map(n => `<option value="${n}" ${musicaSelecionada.tom === n ? 'selected' : ''}>${n}</option>`).join('');
+
+
+      document.getElementById('painelEdicao').innerHTML = `
+        <h3 style="margin-bottom: 20px; color: #111827;">Editando Música</h3>
+       
+        <div style="margin-bottom: 15px;">
+          <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Título da Música:</label>
+          <input type="text" id="editTitulo" class="input-moderno" value="${musicaSelecionada.titulo}">
+        </div>
+       
+        <div style="margin-bottom: 15px;">
+          <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Tom Principal:</label>
+          <select id="editTom" class="select-moderno" style="max-width: 150px;">${opcoesTom}</select>
+        </div>
+       
+        <div style="margin-bottom: 15px;">
+          <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Cifra:</label>
+          <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <button type="button" class="btn" onclick="formatar('bold')" title="Negrito"><span class="material-icons-round" style="font-size:18px">format_bold</span></button>
+            <button type="button" class="btn" onclick="formatar('italic')" title="Itálico"><span class="material-icons-round" style="font-size:18px">format_italic</span></button>
+          </div>
+          <div id="editConteudo" class="editor-cifra" contenteditable="true"></div>
+        </div>
+       
+        <div style="display:flex; justify-content: space-between; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+          <button onclick="salvarMusica()" class="btn btn-success"><span class="material-icons-round" style="font-size:18px">save</span> Salvar Alterações</button>
+          <button onclick="excluirMusica()" class="btn btn-danger"><span class="material-icons-round" style="font-size:18px">delete</span> Excluir Música</button>
+        </div>
+      `;
+
+
+      const editor = document.getElementById('editConteudo');
+      editor.innerHTML = musicaSelecionada.conteudo || '';
+
+
+      editor.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, text);
+      });
+    }
+
+
+    function formatar(comando) {
+      document.execCommand(comando, false, null);
+      const editor = document.getElementById('editConteudo');
+      if (editor) editor.focus();
+    }
+
+
+    function salvarMusica() {
+      if (!musicaSelecionada) return;
+      musicaSelecionada.titulo = document.getElementById('editTitulo').value.trim();
+      musicaSelecionada.tom = document.getElementById('editTom').value;
+      musicaSelecionada.conteudo = document.getElementById('editConteudo').innerHTML;
+
+
+      salvarLocal();
+      renderizarNavegacao();
+     
+      // Feedback visual rápido
+      const btn = document.querySelector('.btn-success');
+      const textOrigin = btn.innerHTML;
+      btn.innerHTML = '<span class="material-icons-round" style="font-size:18px">check</span> Salvo!';
+      setTimeout(() => { btn.innerHTML = textOrigin; }, 2000);
+    }
+
+
+    function excluirMusica() {
+      if (!musicaSelecionada) return;
+      if (confirm(`Deseja excluir a música "${musicaSelecionada.titulo}"?`)) {
+        dadosApp[pastaSelecionada].musicas = dadosApp[pastaSelecionada].musicas.filter(m => m.id !== musicaSelecionada.id);
+        musicaSelecionada = null;
+        salvarLocal();
+        renderizarNavegacao();
+        document.getElementById('painelEdicao').innerHTML = '<p style="text-align:center; color:#9ca3af; padding:50px">Selecione uma pasta ou música ao lado para editar.</p>';
+      }
+    }
+
+
+    verificarAutenticacao();
+  </script>
+</body>
+</html>
+
