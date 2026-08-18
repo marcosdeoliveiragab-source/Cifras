@@ -179,7 +179,7 @@ body {
   display: flex;
   align-items: center;
   padding: 18px 20px;
-  border-radius: 16px; /* Mais arredondado */
+  border-radius: 16px;
   text-decoration: none;
   color: inherit;
   box-shadow: 0 1px 2px rgba(0,0,0,0.03);
@@ -200,14 +200,12 @@ body {
   align-items: center;
   justify-content: center;
   margin-right: 18px;
-  background: transparent; /* Removido o fundo */
+  background: transparent;
 }
 
-/* Cores sólidas igual a imagem enviada */
 .card-icon.folder { color: #fbbf24; } 
 .card-icon.music { color: #60a5fa; }
-
-.card-icon .material-icons-round { font-size: 40px; } /* Ícone um pouco maior */
+.card-icon .material-icons-round { font-size: 40px; }
 
 .card-content { flex: 1; }
 .card-content h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: #111827; }
@@ -225,37 +223,124 @@ body {
 
 .chevron { color: #9ca3af; }
 
-/* ================= CONTROLES DA MÚSICA & CIFRAS ================= */
-.controles-musica {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
+/* ================= CONTROLES DA MÚSICA & CIFRAS (NOVO DESIGN) ================= */
+.controles-musica-moderno {
   display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
+  flex-direction: column;
+  gap: 12px;
   margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  border: 1px solid #e5e7eb;
-  align-items: center;
 }
 
-.grupo-controle {
+.linha-controles {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.controle-pilula {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 30px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f9fafb;
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1px solid #f3f4f6;
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
-.grupo-controle strong { font-size: 13px; color: #4b5563; }
+.controle-pilula span.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-right: 4px;
+}
 
+.btn-circular {
+  background: #f3f4f6;
+  border: none;
+  color: #374151;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-circular:hover { background: #e5e7eb; }
+
+.select-invisivel {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  outline: none;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  appearance: none;
+}
+
+.controle-rolagem-container {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  padding: 4px 15px 4px 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+
+.btn-iniciar-rolagem {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 26px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.btn-iniciar-rolagem:hover { background: #2563eb; }
+
+.slider-moderno {
+  -webkit-appearance: none;
+  flex: 1;
+  margin-left: 15px;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  outline: none;
+}
+.slider-moderno::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #6b7280;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.slider-moderno::-webkit-slider-thumb:hover {
+  background: #4b5563;
+  transform: scale(1.2);
+}
+
+/* Área da Cifra */
 pre {
   font-family: 'Courier New', Courier, monospace;
   font-size: 16px;
-  white-space: pre; /* Garante que não quebre linha para calcular o zoom real */
-  overflow-x: auto; /* Adiciona scroll se for menor que a tela pra não bugar layout */
+  white-space: pre; 
+  overflow-x: auto; 
   line-height: 1.5;
   background: white;
   padding: 20px;
@@ -266,7 +351,7 @@ pre {
 
 .acorde { color: #2563eb; font-weight: bold; }
 
-/* ================= BOTÕES ================= */
+/* ================= BOTÕES (Geral) ================= */
 .btn {
   padding: 8px 16px;
   cursor: pointer;
