@@ -9,7 +9,6 @@
 </head>
 <body>
 
-
   <!-- Tela de Login (Apenas visível se não autenticado) -->
   <div id="telaLogin" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
     <div class="modal-box" style="width: 100%;">
@@ -23,10 +22,9 @@
     </div>
   </div>
 
-
   <!-- Conteúdo Admin -->
   <div id="conteudoAdmin" style="display: none;">
-   
+    
     <header class="navbar">
       <div class="nav-left">
         <div class="brand">
@@ -45,13 +43,11 @@
       </div>
     </header>
 
-
     <div class="container" style="max-width: 1100px;">
-     
+      
       <div class="cabecalho-secao" style="justify-content: flex-end; margin-bottom: 15px;">
         <button onclick="baixarBackup()" class="btn btn-primary"><span class="material-icons-round" style="font-size: 18px;">download</span> Salvar Backup (JSON)</button>
       </div>
-
 
       <div class="admin-layout">
         <!-- Barra Lateral -->
@@ -59,9 +55,15 @@
           <button onclick="criarPasta()" class="btn btn-success" style="width: 100%; justify-content: center; margin-bottom: 10px;">
             <span class="material-icons-round" style="font-size: 18px;">create_new_folder</span> Nova Pasta
           </button>
+          
+          <!-- NOVA BARRA DE PESQUISA -->
+          <div class="search-container" style="margin-bottom: 15px; padding: 8px 12px;">
+            <span class="material-icons-round" style="font-size: 20px;">search</span>
+            <input type="text" id="buscaAdmin" placeholder="Buscar pasta ou música..." oninput="renderizarNavegacao()">
+          </div>
+
           <div id="listaNavegacao">Carregando...</div>
         </aside>
-
 
         <!-- Área de Edição Principal -->
         <main class="painel-edicao" id="painelEdicao">
@@ -74,16 +76,14 @@
     </div>
   </div>
 
-
   <script>
     const SENHA_CORRETA = '10022006';
     let dadosApp = [];
     let pastaSelecionada = null;
     let musicaSelecionada = null;
-
+    let pastasExpandidas = new Set(); // Guarda quais pastas estão abertas
 
     const NOTAS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
 
     function verificarAutenticacao() {
       if (sessionStorage.getItem('adminAutenticado') === 'true') {
@@ -92,7 +92,6 @@
         carregarDadosAdmin();
       }
     }
-
 
     function autenticar() {
       const senhaDigitada = document.getElementById('inputSenha').value;
@@ -107,15 +106,12 @@
       }
     }
 
-
     function tratarTeclaEnter(event) { if (event.key === 'Enter') autenticar(); }
-
 
     function sairAdmin() {
       sessionStorage.removeItem('adminAutenticado');
       window.location.reload();
     }
-
 
     async function carregarDadosAdmin() {
       const salvo = localStorage.getItem('dadosCifras');
@@ -132,9 +128,7 @@
       }
     }
 
-
     function salvarLocal() { localStorage.setItem('dadosCifras', JSON.stringify(dadosApp, null, 2)); }
-
 
     function baixarBackup() {
       salvarLocal();
@@ -147,42 +141,79 @@
       downloadAnchor.remove();
     }
 
+    // NOVA FUNÇÃO: Abre e fecha as pastas no clique
+    function togglePasta(pIdx) {
+      if (pastasExpandidas.has(pIdx)) {
+        pastasExpandidas.delete(pIdx);
+      } else {
+        pastasExpandidas.add(pIdx);
+      }
+      renderizarNavegacao();
+    }
 
+    // FUNÇÃO ATUALIZADA: Renderiza com acordeão e filtro de pesquisa
     function renderizarNavegacao() {
       const nav = document.getElementById('listaNavegacao');
+      const inputBusca = document.getElementById('buscaAdmin');
+      const termoBusca = inputBusca ? inputBusca.value.toLowerCase() : '';
       let html = '';
 
-
       dadosApp.forEach((pasta, pIdx) => {
+        // Lógica de pesquisa
+        const matchPasta = pasta.nome.toLowerCase().includes(termoBusca);
+        const musicasFiltradas = pasta.musicas.filter(m => m.titulo.toLowerCase().includes(termoBusca));
+
+        // Se tem busca ativa e não achou nada nesta pasta, não exibe ela
+        if (termoBusca && !matchPasta && musicasFiltradas.length === 0) return;
+
+        // Lógica de Acordeão: A pasta abre se estiver no Set ou se o usuário estiver pesquisando algo
+        const estaAberta = pastasExpandidas.has(pIdx) || termoBusca.length > 0;
+        const iconeSeta = estaAberta ? 'expand_more' : 'chevron_right';
+
         html += `
           <div class="pasta-admin-item">
-            <div class="pasta-admin-header">
-              <span style="display: flex; align-items: center; gap: 5px;"><span class="material-icons-round" style="color: #ca8a04; font-size:18px">folder</span> ${pasta.nome}</span>
-              <div style="display:flex; gap: 5px;">
+            <!-- Cabeçalho agora chama o togglePasta -->
+            <div class="pasta-admin-header" style="cursor: pointer; user-select: none;" onclick="togglePasta(${pIdx})">
+              <span style="display: flex; align-items: center; gap: 5px;">
+                <span class="material-icons-round" style="color: #9ca3af; font-size:20px">${iconeSeta}</span>
+                <span class="material-icons-round" style="color: #ca8a04; font-size:18px">folder</span> 
+                ${pasta.nome}
+              </span>
+              <!-- stopPropagation impede que clicar em "editar" ou "excluir" abra/feche a pasta -->
+              <div style="display:flex; gap: 5px;" onclick="event.stopPropagation()">
                 <button onclick="editarPasta(${pIdx})" class="icon-btn" title="Renomear"><span class="material-icons-round" style="font-size:16px;">edit</span></button>
                 <button onclick="excluirPasta(${pIdx})" class="icon-btn" title="Excluir Pasta"><span class="material-icons-round" style="font-size:16px; color:#ef4444">delete</span></button>
               </div>
             </div>
-           
-            <div style="margin-top: 10px;">
-              ${pasta.musicas.map(musica => {
-                const ativa = (musicaSelecionada && musicaSelecionada.id === musica.id) ? 'ativa' : '';
-                return `
-                  <div class="musica-admin-item ${ativa}" onclick="selecionarMusica(${pIdx}, '${musica.id}')">
-                    <span style="display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:14px">music_note</span> ${musica.titulo}</span>
-                  </div>
-                `;
-              }).join('')}
-              <button onclick="criarMusica(${pIdx})" class="btn" style="font-size: 12px; margin-top: 8px; width: 100%; justify-content: center; padding: 4px;">+ Adicionar Música</button>
+            
+            <!-- Container das Músicas (Esconde/Mostra) -->
+            <div style="display: ${estaAberta ? 'block' : 'none'}; margin-top: 10px; padding-left: 10px; border-left: 2px solid #e5e7eb; margin-left: 10px;">
+        `;
+
+        const musicasParaMostrar = termoBusca ? musicasFiltradas : pasta.musicas;
+
+        musicasParaMostrar.forEach(musica => {
+          const ativa = (musicaSelecionada && musicaSelecionada.id === musica.id) ? 'ativa' : '';
+          html += `
+            <div class="musica-admin-item ${ativa}" onclick="selecionarMusica(${pIdx}, '${musica.id}')">
+              <span style="display:flex; align-items:center; gap:5px;"><span class="material-icons-round" style="font-size:14px; color: #6b7280;">music_note</span> ${musica.titulo}</span>
+            </div>
+          `;
+        });
+
+        html += `
+              <button onclick="criarMusica(${pIdx})" class="btn" style="font-size: 12px; margin-top: 8px; width: 100%; justify-content: center; padding: 4px; background: #f3f4f6;">+ Adicionar Música</button>
             </div>
           </div>
         `;
       });
 
-
-      nav.innerHTML = html;
+      if (html === '') {
+        nav.innerHTML = '<p style="text-align:center; color:#9ca3af; font-size: 14px; padding: 20px;">Nenhum resultado encontrado.</p>';
+      } else {
+        nav.innerHTML = html;
+      }
     }
-
 
     function criarPasta() {
       const nome = prompt('Nome da nova pasta:');
@@ -192,7 +223,6 @@
       }
     }
 
-
     function editarPasta(pIdx) {
       const novoNome = prompt('Novo nome da pasta:', dadosApp[pIdx].nome);
       if (novoNome && novoNome.trim()) {
@@ -200,7 +230,6 @@
         salvarLocal(); renderizarNavegacao();
       }
     }
-
 
     function excluirPasta(pIdx) {
       if (confirm(`Excluir a pasta "${dadosApp[pIdx].nome}" e todas as suas músicas?`)) {
@@ -211,43 +240,39 @@
       }
     }
 
-
     function criarMusica(pIdx) {
       const titulo = prompt('Título da nova música:');
       if (titulo && titulo.trim()) {
         const novaMusica = { id: 'm_' + Date.now(), titulo: titulo.trim(), tom: 'C', conteudo: 'Cole a cifra aqui...' };
         dadosApp[pIdx].musicas.push(novaMusica);
+        pastasExpandidas.add(pIdx); // Abre a pasta automaticamente ao criar música
         salvarLocal(); renderizarNavegacao();
         selecionarMusica(pIdx, novaMusica.id);
       }
     }
-
 
     function selecionarMusica(pIdx, mId) {
       pastaSelecionada = pIdx;
       musicaSelecionada = dadosApp[pIdx].musicas.find(m => m.id === mId);
       renderizarNavegacao();
 
-
       if (!musicaSelecionada) return;
-
 
       const opcoesTom = NOTAS.map(n => `<option value="${n}" ${musicaSelecionada.tom === n ? 'selected' : ''}>${n}</option>`).join('');
 
-
       document.getElementById('painelEdicao').innerHTML = `
         <h3 style="margin-bottom: 20px; color: #111827;">Editando Música</h3>
-       
+        
         <div style="margin-bottom: 15px;">
           <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Título da Música:</label>
           <input type="text" id="editTitulo" class="input-moderno" value="${musicaSelecionada.titulo}">
         </div>
-       
+        
         <div style="margin-bottom: 15px;">
           <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Tom Principal:</label>
           <select id="editTom" class="select-moderno" style="max-width: 150px;">${opcoesTom}</select>
         </div>
-       
+        
         <div style="margin-bottom: 15px;">
           <label style="display:block; font-weight: 500; margin-bottom: 5px; color:#4b5563;">Cifra:</label>
           <div style="display:flex; gap:5px; margin-bottom:8px;">
@@ -256,17 +281,15 @@
           </div>
           <div id="editConteudo" class="editor-cifra" contenteditable="true"></div>
         </div>
-       
+        
         <div style="display:flex; justify-content: space-between; margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
           <button onclick="salvarMusica()" class="btn btn-success"><span class="material-icons-round" style="font-size:18px">save</span> Salvar Alterações</button>
           <button onclick="excluirMusica()" class="btn btn-danger"><span class="material-icons-round" style="font-size:18px">delete</span> Excluir Música</button>
         </div>
       `;
 
-
       const editor = document.getElementById('editConteudo');
       editor.innerHTML = musicaSelecionada.conteudo || '';
-
 
       editor.addEventListener('paste', function(e) {
         e.preventDefault();
@@ -275,13 +298,11 @@
       });
     }
 
-
     function formatar(comando) {
       document.execCommand(comando, false, null);
       const editor = document.getElementById('editConteudo');
       if (editor) editor.focus();
     }
-
 
     function salvarMusica() {
       if (!musicaSelecionada) return;
@@ -289,17 +310,15 @@
       musicaSelecionada.tom = document.getElementById('editTom').value;
       musicaSelecionada.conteudo = document.getElementById('editConteudo').innerHTML;
 
-
       salvarLocal();
       renderizarNavegacao();
-     
+      
       // Feedback visual rápido
       const btn = document.querySelector('.btn-success');
       const textOrigin = btn.innerHTML;
       btn.innerHTML = '<span class="material-icons-round" style="font-size:18px">check</span> Salvo!';
       setTimeout(() => { btn.innerHTML = textOrigin; }, 2000);
     }
-
 
     function excluirMusica() {
       if (!musicaSelecionada) return;
@@ -312,9 +331,7 @@
       }
     }
 
-
     verificarAutenticacao();
   </script>
 </body>
 </html>
-
