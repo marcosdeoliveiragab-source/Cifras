@@ -65,19 +65,39 @@
       }
     }
 
-    // ============ CARREGAMENTO DE DADOS ============
+    // ============ CARREGAMENTO INTELIGENTE (FIM DO PROBLEMA DE CACHE) ============
     async function carregarDados() {
-      const salvo = localStorage.getItem('dadosCifras');
-      if (salvo) {
-        dadosApp = JSON.parse(salvo); navegar();
-      } else {
-        try {
-          const resposta = await fetch('backup.json');
-          dadosApp = await resposta.json();
-          localStorage.setItem('dadosCifras', JSON.stringify(dadosApp));
+      const salvoLocalmente = localStorage.getItem('dadosCifras');
+      const isAdmin = sessionStorage.getItem('adminAutenticado') === 'true';
+
+      try {
+        // Se for admin, prioriza o cache local para ele poder testar as edições antes de enviar o backup.json pro github
+        if (isAdmin && salvoLocalmente) {
+          dadosApp = JSON.parse(salvoLocalmente);
           navegar();
-        } catch (erro) {
-          document.getElementById('app').innerHTML = '<p>Erro ao carregar os dados.</p>';
+          return;
+        }
+
+        // Para os membros da banda e aparelhos comuns: sempre baixar a versão mais fresca do arquivo, burlando o cache
+        const timestampCache = new Date().getTime();
+        const resposta = await fetch('backup.json?nocache=' + timestampCache);
+        
+        if (!resposta.ok) throw new Error('Falha HTTP');
+        
+        dadosApp = await resposta.json();
+        
+        // Atualiza a memória do celular com o dado novo, para o caso da internet cair depois
+        localStorage.setItem('dadosCifras', JSON.stringify(dadosApp));
+        navegar();
+
+      } catch (erro) {
+        console.warn('Usando dados offline. Erro ao buscar backup:', erro);
+        // Se cair a internet, ele ainda tenta usar o que tem no celular para não deixar a banda na mão
+        if (salvoLocalmente) {
+          dadosApp = JSON.parse(salvoLocalmente);
+          navegar();
+        } else {
+          document.getElementById('app').innerHTML = '<p style="text-align: center; color: #6b7280; margin-top: 40px;">Sem conexão com a internet e nenhum dado salvo offline.</p>';
         }
       }
     }
@@ -190,9 +210,9 @@
       const btn = document.getElementById('btnRolagem');
       if (intervalRolagem) {
         clearInterval(intervalRolagem); intervalRolagem = null;
-        btn.innerHTML = '<span class="material-icons-round" style="font-size:16px">play_arrow</span> Iniciar';
+        btn.innerHTML = '<span class="material-icons-round" style="font-size:18px">play_arrow</span> Iniciar';
       } else {
-        btn.innerHTML = '<span class="material-icons-round" style="font-size:16px">pause</span> Pausar';
+        btn.innerHTML = '<span class="material-icons-round" style="font-size:18px">pause</span> Pausar';
         iniciarIntervaloRolagem();
       }
     }
@@ -212,32 +232,24 @@
       if (preConteudo) preConteudo.style.fontSize = `${tamanhoFonteAtual}px`;
     }
 
-    // ============ ZOOM AUTOMÁTICO INTELIGENTE ============
+    // ============ ZOOM AUTOMÁTICO ============
     function ajustarZoomAutomatico() {
       const preElement = document.getElementById('cifraConteudo');
       if (!preElement) return;
-
-      let size = 30; // Começa com um tamanho grande e vai reduzindo
+      let size = 30; 
       preElement.style.fontSize = size + 'px';
-
-      // Reduz o tamanho da fonte até não ter barra de rolagem horizontal
-      // ou até bater no limite mínimo legível (10px).
       while (preElement.scrollWidth > preElement.clientWidth && size > 10) {
         size -= 1;
         preElement.style.fontSize = size + 'px';
       }
-
-      tamanhoFonteAtual = size; // Atualiza a variável global pros botões funcionarem depois
+      tamanhoFonteAtual = size; 
     }
 
 
     // ============ RENDERIZAÇÃO ============
-
-    // Função separada pra renderizar só a lista de Pastas (evita perder o foco do teclado)
     function gerarHtmlListaPastas() {
       let pastasFiltradas = dadosApp.map((pasta, index) => ({...pasta, indexOriginal: index}))
                                     .filter(p => p.nome.toLowerCase().includes(termoBuscaAtual));
-
       let html = pastasFiltradas.map(pasta => `
         <a href="#/pasta/${pasta.indexOriginal}" class="list-card">
           <div class="card-icon folder"><span class="material-icons-round">folder</span></div>
@@ -258,7 +270,6 @@
       return `
         <div class="search-container">
           <span class="material-icons-round">search</span>
-          <!-- Dispara evento para atualizar apenas a lista -->
           <input type="text" placeholder="Buscar por pasta..." oninput="termoBuscaAtual = this.value.toLowerCase(); document.getElementById('listaDinamica').innerHTML = gerarHtmlListaPastas();">
         </div>
 
@@ -280,11 +291,9 @@
       `;
     }
 
-    // Função separada pra renderizar só a lista de Músicas da pasta
     function gerarHtmlListaMusicas(indexPasta) {
       const pasta = dadosApp[indexPasta];
       let musicasFiltradas = pasta.musicas.filter(m => m.titulo.toLowerCase().includes(termoBuscaAtual));
-
       let html = musicasFiltradas.map(musica => `
         <a href="#/musica/${indexPasta}/${musica.id}" class="list-card">
           <div class="card-icon music"><span class="material-icons-round">music_note</span></div>
@@ -301,7 +310,6 @@
     function renderizarPasta(indexPasta) {
       const pasta = dadosApp[indexPasta];
       if (!pasta) return '<p>Pasta não encontrada.</p>';
-
       return `
         <div class="cabecalho-secao">
           <button class="icon-btn" onclick="window.history.back()"><span class="material-icons-round">arrow_back</span></button>
@@ -327,38 +335,44 @@
 
       const opcoesTom = NOTAS.map(n => `<option value="${n}">${n}</option>`).join('');
 
-      // Ajusta o tom e chama o Zoom Automático logo após carregar a interface.
       setTimeout(() => { 
         document.getElementById('selectTom').value = tomAtual; 
         definirTom(tomAtual); 
-        ajustarZoomAutomatico(); // <-- MÁGICA DO ZOOM AQUI
+        ajustarZoomAutomatico(); 
       }, 50);
 
+      // NOVO LAYOUT DOS CONTROLES AQUI
       return `
         <div class="cabecalho-secao">
           <button class="icon-btn" onclick="window.history.back()"><span class="material-icons-round">arrow_back</span></button>
           <h2>${musica.titulo}</h2>
         </div>
 
-        <div class="controles-musica">
-          <div class="grupo-controle">
-            <strong>Tom: </strong>
-            <button class="btn" onclick="alterarTom(-1)">-</button>
-            <select id="selectTom" class="select-moderno" style="width: 60px; padding: 5px;" onchange="definirTom(this.value)">
-              ${opcoesTom}
-            </select>
-            <button class="btn" onclick="alterarTom(1)">+</button>
+        <div class="controles-musica-moderno">
+          <div class="linha-controles">
+            
+            <div class="controle-pilula">
+              <span class="label">Tom</span>
+              <button class="btn-circular" onclick="alterarTom(-1)">-</button>
+              <select id="selectTom" class="select-invisivel" onchange="definirTom(this.value)">
+                ${opcoesTom}
+              </select>
+              <button class="btn-circular" onclick="alterarTom(1)">+</button>
+            </div>
+
+            <div class="controle-pilula">
+              <span class="label">Fonte</span>
+              <button class="btn-circular" onclick="alterarFonte(-2)">A-</button>
+              <button class="btn-circular" onclick="alterarFonte(2)">A+</button>
+            </div>
+
           </div>
 
-          <div class="grupo-controle">
-            <strong>Fonte: </strong>
-            <button class="btn" onclick="alterarFonte(-2)">A-</button>
-            <button class="btn" onclick="alterarFonte(2)">A+</button>
-          </div>
-
-          <div class="grupo-controle" style="flex: 1; min-width: 250px;">
-            <button id="btnRolagem" class="btn btn-primary" onclick="alternarRolagem()"><span class="material-icons-round" style="font-size:16px">play_arrow</span> Iniciar</button>
-            <input type="range" id="velocidadeRolagem" min="1" max="100" value="30" oninput="atualizarVelocidadeRolagem()" style="flex: 1; margin-left: 10px;">
+          <div class="controle-rolagem-container">
+            <button id="btnRolagem" class="btn-iniciar-rolagem" onclick="alternarRolagem()">
+              <span class="material-icons-round" style="font-size:18px">play_arrow</span> Iniciar
+            </button>
+            <input type="range" id="velocidadeRolagem" class="slider-moderno" min="1" max="100" value="30" oninput="atualizarVelocidadeRolagem()">
           </div>
         </div>
 
@@ -368,7 +382,7 @@
 
     function navegar() {
       if (intervalRolagem) { clearInterval(intervalRolagem); intervalRolagem = null; }
-      termoBuscaAtual = ''; // Limpa a busca ao trocar de tela
+      termoBuscaAtual = ''; 
       
       const hash = window.location.hash;
       const app = document.getElementById('app');
