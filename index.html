@@ -3,11 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  
   <title>Cifras e Galeria - Banda</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -359,22 +354,22 @@
     async function carregarDados() {
       const salvoLocalmente = localStorage.getItem('dadosCifras');
       try {
-        if (salvoLocalmente) {
-          let parsed = JSON.parse(salvoLocalmente);
-          dadosApp = Array.isArray(parsed) ? { cifras: parsed, galeria: [], pads: [] } : { pads: [], ...parsed };
-          navegar();
-          return;
-        }
+        // 1. Força a busca da versão mais recente (Cache-Busting forte)
         const timestampCache = new Date().getTime();
-        const resposta = await fetch('backup.json?nocache=' + timestampCache);
+        const resposta = await fetch('backup.json?nocache=' + timestampCache, { cache: 'no-store' });
+        
         if (!resposta.ok) throw new Error('Falha HTTP');
         
+        // 2. Lê os dados novos do seu backup.json
         let json = await resposta.json();
         dadosApp = Array.isArray(json) ? { cifras: json, galeria: [], pads: [] } : { pads: [], ...json };
 
+        // 3. Atualiza o banco de dados do celular com a versão nova
         localStorage.setItem('dadosCifras', JSON.stringify(dadosApp));
         navegar();
+
       } catch (erro) {
+        // 4. Se falhar (ex: você estiver sem internet), ele usa a versão antiga que estava salva
         if (salvoLocalmente) {
           let parsed = JSON.parse(salvoLocalmente);
           dadosApp = Array.isArray(parsed) ? { cifras: parsed, galeria: [], pads: [] } : { pads: [], ...parsed };
