@@ -962,7 +962,7 @@ pre {
 
   .stats-container {
     justify-content: space-between;
-    gap: 10px;
+    gap: 20px;
   }
 
   .icon-bg-folder,
