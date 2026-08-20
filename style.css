@@ -961,8 +961,8 @@ pre {
   }
 
   .stats-container {
-    justify-content: space-between;
-    gap: 20px;
+    justify-content: flex-start; /* Alinha os contadores juntos na esquerda */
+    gap: 20px;                   /* Mantém um espaço agradável entre eles */
   }
 
   .icon-bg-folder,
